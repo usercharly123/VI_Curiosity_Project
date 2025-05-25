@@ -31,6 +31,6 @@ git clone https://github.com/Unity-Technologies/ml-agents.git
 - Under Pyramids, select Scenes and double click on the Pyramid scene, which should open the scene
 - under File/Build Profiles, at the top left-hand corner of the editor, you can build profiles for your Windows/Mac/Linux/... operating system
 
-**OR**, you can just take our pre-exported profiles in the Pyramid16half_agents_windows or Pyramid16half_agents_linux folders. Note that the linux version has only bee, tested on the SCITAS cluster, and has been built for linux servers, which may be different from your linux machine.
+**OR**, you can just take our pre-exported profiles in the Pyramid16half_agents_windows or Pyramid16half_agents_linux folders. Note that the linux version has only been tested on the SCITAS cluster, and has been built for linux servers, which may be different from your linux machine.
 
 ### Training the agent

@@ -39,4 +39,17 @@ Begin by activating the conda environment
 ```bash
 conda activate curiosity
 ```
+
+Then, you can run 
+```python
+GymUnityTrain16.py 150 linux both False True False
+```
+where the arguments represent:
+- first argument (150 here): int, max number of episode during the training
+- second argument (linux here): str, your operating system you're running the script on (either windows or linux)
+- third argument (both): str, the reward mode for the training of the agent. Either "extrinsic", "intrinsic", or "both.
+- fourth argument (False here): bool, whether to visualize the agent during training
+- fifth argument (True here): bool, whether to load the model. When set to False, trains from scratch 
+- sixth argument (False here): bool, whether to permute the action space of the agent
+
 ## **Mario environment**

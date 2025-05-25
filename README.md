@@ -15,6 +15,7 @@ bash setup_env.sh
 To work in the Pyramid environment, you can either take the original environment from Unity:
 - download the Unity Game Engine ([Unity Hub]([url](https://unity.com/fr/download)))
 - in the Unity Game Engine, download the recommanded editor version 6000.1.1f1
-- clone the [ml-agent github]([url](https://github.com/Unity-Technologies/ml-agents)) with ```bash
+- clone the [ml-agent github]([url](https://github.com/Unity-Technologies/ml-agents)) with
+```bash
 git clone https://github.com/Unity-Technologies/ml-agents.git
 ```

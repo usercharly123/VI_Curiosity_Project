@@ -52,4 +52,15 @@ where the arguments represent:
 - fifth argument (True here): bool, whether to load the model. When set to False, trains from scratch 
 - sixth argument (False here): bool, whether to permute the action space of the agent
 
+### Observing the results
+There are two types of results that you can observe.
+
+#### Reward curves
+The intrinsic and extrinsic rewards are in a tensorboard event file all along the training. Depending on the reward_mode that you chose, the event file will be located in events/reward_mode/. You can then use the Plots.ipynb script to easily visualize them.
+
+#### Behavior of the agent
+With the training, we also have access to the final weights of the model, which are saved in models/reward_mode/Pyramid.onnx. You can use the onnx_adding_constants.py file with the path to modify the onnx file in order to make it compatible with the Unity Editor. This will generate a Pyramid_modified.onnx file.
+
+Then, in Unity, you can select the agent in the "Hierarchy" tab under "AreaPB", and select the Pyramid_modified.onnx file you just generated. An easy way to do so can be to copy paste the Pyramid_modified.onnx file into the "Pyramids" folder used in Unity (this folder is under ml-agents/Project/Assets/ML-Agents/Examples/Pyramids). You can now click on the "Run" button at the top of the tab to observe the behavior of the agent with your trained policy.
+
 ## **Mario environment**

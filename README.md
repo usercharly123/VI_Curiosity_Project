@@ -14,7 +14,7 @@ bash setup_env.sh
 ## **Pyramid environment**
 The Pyramid environment consists of a square 2D environment where the blue agent needs to press a button to spawn a pyramid, then navigate to the pyramid, knock it over, and move to the gold brick at the top to get a reward.
 
-![Alt text](Pyramid_image.png)
+![Alt text](Images/Pyramid_image.png)
 
 ### Building the profiles for the environment (optional)
 To work in the Pyramid environment, you can **either** take the original environment from Unity:

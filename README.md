@@ -11,12 +11,6 @@ To begin the experiments, you first need to install the required packages and de
 bash setup_env.sh
 ```
 
-If at any point you encounter a ModuleNotFound error please run 
-```bash
-pip install -e .
-```
-after activating the conda environment.
-
 ## **Pyramid environment**
 The Pyramid environment consists of a square 2D environment where the blue agent needs to press a button to spawn a pyramid, then navigate to the pyramid, knock it over, and move to the gold brick at the top to get a reward.
 
@@ -26,10 +20,7 @@ The Pyramid environment consists of a square 2D environment where the blue agent
 To work in the Pyramid environment, you can **either** take the original environment from Unity:
 - download the Unity Game Engine ([Unity Hub]([url](https://unity.com/fr/download)))
 - in the Unity Game Engine, download the recommanded editor version 6000.1.1f1
-- clone the [ml-agent github]([url](https://github.com/Unity-Technologies/ml-agents)) with
-```bash
-git clone https://github.com/Unity-Technologies/ml-agents.git
-```
+- use the cloned version of [ml-agent github]([url](https://github.com/Unity-Technologies/ml-agents)) that should have been created when running the setup_env.sh
 - create a new Project in the Unity Editor (v6000.1.1f1), and open the project
 - go to the top menu and select Window -> Package Management -> Package Manager
 - in the top left-hand corner of the window that opens, select "+", "Install package from disk", and select your local path to the package of the ml-agents library (should be in ml-agents/Project/Assets/ML-Agents/)

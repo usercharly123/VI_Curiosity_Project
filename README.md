@@ -10,12 +10,10 @@ To begin the experiments, you first need to install the required packages and de
 ```bash
 bash setup_env.sh
 ```
-
-If at any point you encounter a ModuleNotFound error please run 
+If there is any ModuleNotFound errors, please run
 ```bash
 pip install -e .
 ```
-after activating the conda environment.
 
 ## **Pyramid environment**
 The Pyramid environment consists of a square 2D environment where the blue agent needs to press a button to spawn a pyramid, then navigate to the pyramid, knock it over, and move to the gold brick at the top to get a reward.
@@ -26,10 +24,7 @@ The Pyramid environment consists of a square 2D environment where the blue agent
 To work in the Pyramid environment, you can **either** take the original environment from Unity:
 - download the Unity Game Engine ([Unity Hub]([url](https://unity.com/fr/download)))
 - in the Unity Game Engine, download the recommanded editor version 6000.1.1f1
-- clone the [ml-agent github]([url](https://github.com/Unity-Technologies/ml-agents)) with
-```bash
-git clone https://github.com/Unity-Technologies/ml-agents.git
-```
+- use the cloned version of [ml-agent github]([url](https://github.com/Unity-Technologies/ml-agents)) that should have been created when running the setup_env.sh
 - create a new Project in the Unity Editor (v6000.1.1f1), and open the project
 - go to the top menu and select Window -> Package Management -> Package Manager
 - in the top left-hand corner of the window that opens, select "+", "Install package from disk", and select your local path to the package of the ml-agents library (should be in ml-agents/Project/Assets/ML-Agents/)
@@ -44,4 +39,28 @@ Begin by activating the conda environment
 ```bash
 conda activate curiosity
 ```
+
+Then, you can run 
+```python
+python Pyramid/GymUnityTrain16.py --max-episodes 10 --os windows --reward_mode both --graphics --load_model
+```
+where the arguments represent:
+- first argument (150 here): int, max number of episode during the training
+- second argument (linux here): str, your operating system you're running the script on (either windows or linux)
+- third argument (both): str, the reward mode for the training of the agent. Either "extrinsic", "intrinsic", or "both.
+- fourth argument (False here): bool, whether to visualize the agent during training
+- fifth argument (True here): bool, whether to load the model. When set to False, trains from scratch 
+- sixth argument (False here): bool, whether to permute the action space of the agent
+
+### Observing the results
+There are two types of results that you can observe.
+
+#### Reward curves
+The intrinsic and extrinsic rewards are in a tensorboard event file all along the training. Depending on the reward_mode that you chose, the event file will be located in events/reward_mode/. You can then use the Plots.ipynb script to easily visualize them.
+
+#### Behavior of the agent
+With the training, we also have access to the final weights of the model, which are saved in models/reward_mode/Pyramid.onnx. You can use the onnx_adding_constants.py file with the path to modify the onnx file in order to make it compatible with the Unity Editor. This will generate a Pyramid_modified.onnx file.
+
+Then, in Unity, you can select the agent in the "Hierarchy" tab under "AreaPB", and select the Pyramid_modified.onnx file you just generated. An easy way to do so can be to copy paste the Pyramid_modified.onnx file into the "Pyramids" folder used in Unity (this folder is under ml-agents/Project/Assets/ML-Agents/Examples/Pyramids). You can now click on the "Run" button at the top of the tab to observe the behavior of the agent with your trained policy.
+
 ## **Mario environment**

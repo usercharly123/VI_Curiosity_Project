@@ -42,7 +42,7 @@ conda activate curiosity
 
 Then, you can run 
 ```python
-python Pyramid/GymUnityTrain16.py --max-episodes 150 --os windows --reward_mode both --graphics True --load_model True --permute False
+python Pyramid/GymUnityTrain16.py --max-episodes 10 --os windows --reward_mode both --graphics --load_model
 ```
 where the arguments represent:
 - first argument (150 here): int, max number of episode during the training

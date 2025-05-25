@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "curiosity"
+version = "1.0.0"
+description = "curiosity"
+requires-python = ">=3.8"
+readme = {file = "README.md", content-type = "text/markdown"}
+dependencies = [
+    "absl-py==2.2.2",
+    "attrs==25.3.0",
+    "cattrs==1.5.0",
+    "cloudpickle==3.1.1",
+    "filelock==3.18.0",
+    "fsspec==2025.3.2",
+    "grpcio==1.71.0",
+    "gym==0.26.2",
+    "gym-notices==0.0.8",
+    "h5py==3.13.0",
+    "importlib-metadata==8.7.0",
+    "Jinja2==3.1.6",
+    "Markdown==3.8",
+    "MarkupSafe==3.0.2",
+    "matplotlib==3.9.2",
+    "mkl-service==2.4.0",
+    "mlagents==0.30.0",
+    "mlagents-envs==0.30.0",
+    "mpmath==1.3.0",
+    "networkx==3.2.1",
+    "numpy==2.0.2",
+    "PettingZoo==1.15.0",
+    "protobuf==3.20.3",
+    "pypiwin32==223",
+    "PyQt6==6.7.1",
+    "pywin32==310",
+    "PyYAML==6.0.2",
+    "sympy==1.14.0",
+    "tensorboard==2.19.0",
+    "tensorboard-data-server==0.7.2",
+    "torch==2.7.0",
+    "typing-extensions==4.13.2",
+    "Werkzeug==3.1.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ipykernel",  # For Jupyter kernel (optional)
+    "black",      # Optional dev tools
+    "pytest",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/usercharly123/Curiosity"
+
+[tool.setuptools.packages.find]
+exclude = ["cfgs*", "assets*", "notebooks*"]
+
+[tool.wheel]
+exclude = ["cfgs*", "assets*", "notebooks*"]

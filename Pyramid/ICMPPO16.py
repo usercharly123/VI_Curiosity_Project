@@ -93,14 +93,18 @@ class ICMPPO:
             # On Linux, rewards are 1D arrays, need to reshape
             rewards_list = []
             for i, r in enumerate(memory.rewards[:-1]):
+                # Handle different reward shapes
                 if r.ndim == 1:
-                    r = r.reshape(-1, 1)  # Reshape to (16, 1)
+                    if r.size == 1:  # Single value (done agent)
+                        r = np.full(16, -0.001).reshape(-1, 1)  # Pad with -0.001
+                    else:
+                        r = r.reshape(-1, 1)  # Reshape to (16, 1)
                 elif r.ndim == 2:
                     if r.shape[1] != 1:  # If not (16, 1), reshape
                         r = r.reshape(-1, 1)
                 else:
                     print(f"Warning: reward at index {i} has unexpected shape {r.shape}")
-                    r = r.reshape(-1, 1)  # Force reshape to (16, 1)
+                    r = np.full(16, -0.001).reshape(-1, 1)  # Force reshape to (16, 1)
                 rewards_list.append(r)
                 if i < 5:  # Print first 5 processed rewards
                     print(f"Processed reward {i} shape:", r.shape)

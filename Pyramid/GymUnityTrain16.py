@@ -31,7 +31,7 @@ def main():
     current_os = args.os
 
     if current_os == "linux":
-        env_path = "Pyramid/Pyramid_linux_half/Pyramid_linux_half.x86_64"
+        env_path = "Pyramid/Pyramids16_linux_half_agents/Pyramids16_linux_half_agents.x86_64"
     elif current_os == "windows":
         env_path = 'Pyramid/Pyramids16half_agents'
 
@@ -39,7 +39,7 @@ def main():
     log_interval = 100     # print avg reward in the interval
     max_episodes = args.max_episodes  # WAS 350      # max training episodes
     max_timesteps = 1000    # WAS 1000 max timesteps in one episode
-    update_timestep = 1024  # WAS 2048 Replay buffer size, update policy every n timesteps
+    update_timestep = 2048  # WAS 2048 Replay buffer size, update policy every n timesteps
     
     print(f"Running on {current_os} for {max_episodes} episodes...")
 
@@ -142,12 +142,12 @@ def main():
 
             episode_rewards += rewards
             
-            if timestep % 50 == 0:
+            if timestep % 100 == 0:
                 print("Timestep: ", timestep)
                 print("Rewards: ", episode_rewards)
 
             # Update policy every 2048 timesteps
-            if timestep % 2048 == 0 and len(memory.states) > 0:
+            if timestep % update_timestep == 0 and len(memory.states) > 0:
                 print(f"Updating policy at timestep {timestep}")
                 agent.update(memory, timestep)
                 memory.clear_memory()  # Clear memory after update

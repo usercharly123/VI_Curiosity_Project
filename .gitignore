@@ -2,6 +2,7 @@
 __pycache__/
 /Pyramid/events/
 /Pyramid/models/
+/Pyramid/Scripts/
 *.py[cod]
 *$py.class
 

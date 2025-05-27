@@ -45,7 +45,7 @@ class ICMPPO:
 
         self.MseLoss = nn.MSELoss(reduction='none')
 
-    def update(self, memory, timestep):
+    def update(self, memory, timestep, current_os='windows'):
         # Convert lists from memory to tensors
         self.timestep = timestep
         
@@ -79,11 +79,17 @@ class ICMPPO:
         print("First few rewards shapes:", [r.shape if hasattr(r, 'shape') else type(r) for r in memory.rewards[:5]])
         print("First few rewards:", [r for r in memory.rewards[:5]])
         
-        # Process rewards based on their shape
-        # First convert all rewards to 2D arrays if they're 1D
-        rewards_list = [r.reshape(-1, 1) if r.ndim == 1 else r for r in memory.rewards[:-1]]
-        rewards_np = np.array(rewards_list)
-        rewards = torch.tensor(rewards_np).T.to(self.device).detach()
+        # Process rewards based on OS
+        if current_os == 'linux':
+            # On Linux, rewards are 1D arrays, need to reshape
+            rewards_list = [r.reshape(-1, 1) if r.ndim == 1 else r for r in memory.rewards[:-1]]
+            rewards_np = np.array(rewards_list)  # Shape: (2047, 16, 1)
+            rewards = torch.tensor(rewards_np).to(self.device).detach()  # Shape: (2047, 16, 1)
+            rewards = rewards.permute(1, 0, 2)  # Shape: (16, 2047, 1)
+        else:  # Windows
+            # On Windows, rewards are already in correct shape
+            rewards_np = np.array(memory.rewards[:-1])
+            rewards = torch.tensor(rewards_np).to(self.device).detach()
         
         mask = (~torch.tensor(
             np.array(memory.is_terminals),
@@ -111,10 +117,10 @@ class ICMPPO:
 
         # Finding cumulative advantage
         with torch.no_grad():
-            state_values = torch.squeeze(self.policy.value_layer(curr_states))
-            next_state_values = torch.squeeze(self.policy.value_layer(next_states))
-            td_target = combined_rewards + self.gamma * next_state_values * mask
-            delta = td_target - state_values
+            state_values = torch.squeeze(self.policy.value_layer(curr_states))  # Shape: (16, 2047)
+            next_state_values = torch.squeeze(self.policy.value_layer(next_states))  # Shape: (16, 2047)
+            td_target = combined_rewards.squeeze(-1) + self.gamma * next_state_values * mask  # Shape: (16, 2047)
+            delta = td_target - state_values  # Shape: (16, 2047)
 
             self.writer.add_scalar('maxValue',
                                    state_values.max(),
@@ -125,14 +131,14 @@ class ICMPPO:
                                    self.timestep
                                    )
 
-            advantage = torch.zeros(1, 16).to(self.device)      
+            advantage = torch.zeros(16, 1).to(self.device)      
             advantage_lst = []
             for i in range(delta.size(1) - 1, -1, -1):
-                delta_t, mask_t = delta[:, i], mask[:, i]
+                delta_t, mask_t = delta[:, i:i+1], mask[:, i:i+1]  # Keep dimensions
                 advantage = delta_t + (self.gamma * self.lambd * advantage) * mask_t
                 advantage_lst.insert(0, advantage)
 
-            advantage_lst = torch.cat(advantage_lst, dim=0).T
+            advantage_lst = torch.cat(advantage_lst, dim=1)  # Shape: (16, 2047)
             # Get local advantage to train value function
             local_advantages = state_values + advantage_lst
             # Normalizing the advantage

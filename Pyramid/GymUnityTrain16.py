@@ -158,7 +158,7 @@ def main():
             # Update policy every 2048 timesteps
             if timestep % update_timestep == 0 and len(memory.states) > 0:
                 print(f"Updating policy at timestep {timestep}")
-                agent.update(memory, timestep)
+                agent.update(memory, timestep, current_os=current_os)
                 memory.clear_memory()  # Clear memory after update
 
         if episode_counter.sum() == 0:

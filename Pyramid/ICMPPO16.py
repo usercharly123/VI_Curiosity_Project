@@ -91,13 +91,19 @@ class ICMPPO:
             print("All reward shapes:", reward_shapes)
             
             # On Linux, rewards are 1D arrays, need to reshape
-            rewards_list = [r.reshape(-1, 1) if r.ndim == 1 else r for r in memory.rewards[:-1]]
+            rewards_list = []
+            for r in memory.rewards[:-1]:
+                if r.ndim == 1:
+                    r = r.reshape(-1, 1)  # Reshape to (16, 1)
+                rewards_list.append(r)
+            
             print("Rewards list length:", len(rewards_list))
             print("First few processed rewards shapes:", [r.shape for r in rewards_list[:5]])
             
-            rewards_np = np.array(rewards_list)  # Shape: (2047, 16, 1)
-            rewards = torch.tensor(rewards_np).to(self.device).detach()  # Shape: (2047, 16, 1)
-            rewards = rewards.permute(1, 0, 2)  # Shape: (16, 2047, 1)
+            # Stack the rewards along a new axis
+            rewards_np = np.stack(rewards_list)  # Shape: (N, 16, 1)
+            rewards = torch.tensor(rewards_np).to(self.device).detach()  # Shape: (N, 16, 1)
+            rewards = rewards.permute(1, 0, 2)  # Shape: (16, N, 1)
             
             # Debug prints for rewards during policy update
             print("First few rewards in memory:", [r for r in memory.rewards[:5]])

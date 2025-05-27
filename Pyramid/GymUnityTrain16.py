@@ -128,10 +128,6 @@ def main():
                 # On Linux, ensure rewards are 1D array
                 if rewards.ndim == 2:
                     rewards = rewards.flatten()
-            else:  # Windows
-                # On Windows, ensure rewards are 2D array
-                if rewards.ndim == 1:
-                    rewards = rewards.reshape(-1, 1)
             
             # Ensure dones is a boolean array with exactly 16 elements
             dones = np.array(dones, dtype=bool)

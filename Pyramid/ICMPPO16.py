@@ -90,17 +90,14 @@ class ICMPPO:
             reward_shapes = [r.shape if hasattr(r, 'shape') else None for r in memory.rewards[:-1]]
             print("All reward shapes:", reward_shapes)
             
-            # Ensure all rewards are 2D arrays with shape (16, 1)
-            rewards_list = []
-            for r in memory.rewards[:-1]:
-                if r.ndim == 1:
-                    r = r.reshape(-1, 1)
-                elif r.ndim == 2 and r.shape[1] != 1:
-                    r = r.reshape(-1, 1)
-                rewards_list.append(r)
-            rewards_np = np.stack(rewards_list)  # Shape: (N, 16, 1)
-            rewards = torch.tensor(rewards_np).to(self.device).detach()
-            rewards = rewards.permute(1, 0, 2)  # Shape: (16, N, 1)
+            # On Linux, rewards are 1D arrays, need to reshape
+            rewards_list = [r.reshape(-1, 1) if r.ndim == 1 else r for r in memory.rewards[:-1]]
+            print("Rewards list length:", len(rewards_list))
+            print("First few processed rewards shapes:", [r.shape for r in rewards_list[:5]])
+            
+            rewards_np = np.array(rewards_list)  # Shape: (2047, 16, 1)
+            rewards = torch.tensor(rewards_np).to(self.device).detach()  # Shape: (2047, 16, 1)
+            rewards = rewards.permute(1, 0, 2)  # Shape: (16, 2047, 1)
             
             # Debug prints for rewards during policy update
             print("First few rewards in memory:", [r for r in memory.rewards[:5]])
@@ -109,6 +106,11 @@ class ICMPPO:
         else:  # Windows
             # On Windows, rewards are already in correct shape
             rewards_np = np.array(memory.rewards[:-1])
+            if rewards_np.ndim == 3:
+                print("Rewards tensor shape before processing:", rewards_np.shape)
+                rewards_np = rewards_np.squeeze(-1)  # (N, 16)
+                print("Rewards tensor shape after processing:", rewards_np.shape)
+            rewards_np = rewards_np.T  # (16, N)
             rewards = torch.tensor(rewards_np).to(self.device).detach()
         
         mask = (~torch.tensor(
@@ -124,7 +126,7 @@ class ICMPPO:
         if self.reward_mode == 'both':
             # Ensure both rewards have the same shape
             if current_os == 'linux':
-                # On Linux, rewards are (16, N, 1) and intr_rewards are (16, N)
+                # On Linux, rewards are (16, 2047, 1) and intr_rewards are (16, 2047)
                 combined_rewards = (rewards.squeeze(-1) + 0.1*intr_rewards) / 2
             else:  # Windows
                 # On Windows, both should already be in correct shape
@@ -143,13 +145,13 @@ class ICMPPO:
 
         # Finding cumulative advantage
         with torch.no_grad():
-            state_values = torch.squeeze(self.policy.value_layer(curr_states))  # Shape: (16, N)
-            next_state_values = torch.squeeze(self.policy.value_layer(next_states))  # Shape: (16, N)
+            state_values = torch.squeeze(self.policy.value_layer(curr_states))  # Shape: (16, 2047)
+            next_state_values = torch.squeeze(self.policy.value_layer(next_states))  # Shape: (16, 2047)
             if current_os == 'linux':
-                td_target = combined_rewards.squeeze(-1) + self.gamma * next_state_values * mask  # Shape: (16, N)
+                td_target = combined_rewards.squeeze(-1) + self.gamma * next_state_values * mask  # Shape: (16, 2047)
             else:
-                td_target = combined_rewards + self.gamma * next_state_values * mask  # Shape: (16, N)
-            delta = td_target - state_values  # Shape: (16, N)
+                td_target = combined_rewards + self.gamma * next_state_values * mask  # Shape: (16, 2047)
+            delta = td_target - state_values  # Shape: (16, 2047)
 
             self.writer.add_scalar('maxValue',
                                    state_values.max(),
@@ -167,7 +169,7 @@ class ICMPPO:
                 advantage = delta_t + (self.gamma * self.lambd * advantage) * mask_t
                 advantage_lst.insert(0, advantage)
 
-            advantage_lst = torch.cat(advantage_lst, dim=1)  # Shape: (16, N)
+            advantage_lst = torch.cat(advantage_lst, dim=1)  # Shape: (16, 2047)
             # Get local advantage to train value function
             local_advantages = state_values + advantage_lst
             # Normalizing the advantage

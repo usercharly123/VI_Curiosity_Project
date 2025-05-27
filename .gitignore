@@ -1,5 +1,7 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+/Pyramid/events/
+/Pyramid/models/
 *.py[cod]
 *$py.class
 

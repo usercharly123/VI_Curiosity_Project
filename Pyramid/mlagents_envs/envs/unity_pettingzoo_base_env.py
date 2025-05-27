@@ -263,36 +263,22 @@ class UnityPettingzooBaseEnv:
         self._infos = {}
         self._agent_id_to_index = {}
 
-    def reset(self):
-        """
-        Resets the environment.
-        """
-        self._assert_loaded()
-        self._agent_index = 0
-        self._reset_states()
-        self._possible_agents = set()
-        self._env.reset()
-        for behavior_name in self._env.behavior_specs.keys():
-            _, _, _ = self._batch_update(behavior_name)
-        self._live_agents.sort()  # unnecessary, only for passing API test
-        self._dones = {agent: False for agent in self._agents}
-        self._rewards = {agent: 0 for agent in self._agents}
-        self._cumm_rewards = {agent: 0 for agent in self._agents}
-            
-        # Process observations for all agents
-        all_observations = []
-        for behavior_name in self._env.behavior_specs.keys():
-            _, _, _ = self._batch_update(behavior_name)
-        
-        # Extract and concatenate numeric observations for each agent
-        for agent_id, agent_data in self._observations.items():
-            # agent_data['observation'] contains the list of observation arrays
-            obs_arrays = agent_data['observation']  # List of arrays
-            concatenated_obs = np.concatenate([arr.flatten() for arr in obs_arrays])
-            all_observations.append(concatenated_obs)
-        
-        # Stack into a single array of shape [num_agents, total_obs_dim]
-        return np.stack(all_observations, axis=0).astype(np.float32)  # Force float32
+    def _recursive_flatten(self, lst):
+        """Recursively flatten a nested list and convert all elements to float."""
+        flattened = []
+        for item in lst:
+            if isinstance(item, (list, tuple)):
+                flattened.extend(self._recursive_flatten(item))
+            elif isinstance(item, np.ndarray):
+                # Handle numpy arrays by flattening them
+                flattened.extend(item.flatten().tolist())
+            else:
+                try:
+                    flattened.append(float(item))
+                except (TypeError, ValueError) as e:
+                    print(f"Warning: Could not convert item {item} to float: {str(e)}")
+                    flattened.append(0.0)  # Default value for non-convertible items
+        return flattened
 
     def _batch_update(self, behavior_name):
         current_batch = self._env.get_steps(behavior_name)
@@ -308,26 +294,78 @@ class UnityPettingzooBaseEnv:
             infos,
             id_map,
         ) = _unwrap_batch_steps(current_batch, behavior_name)
+        
         # Convert observations to proper numpy arrays
         processed_obs = {}
+        
+        # First pass: determine the maximum shape needed
+        max_shape = None
+        for agent_id, obs_data in obs.items():
+            try:
+                if isinstance(obs_data, dict) and 'observation' in obs_data:
+                    obs_arrays = obs_data['observation']
+                    total_dim = sum(arr.size for arr in obs_arrays)
+                    if max_shape is None or total_dim > max_shape:
+                        max_shape = total_dim
+                else:
+                    # Handle the case where obs_data might be a list of arrays
+                    if isinstance(obs_data, (list, tuple)):
+                        # Recursively flatten the list and convert to array
+                        flattened = self._recursive_flatten(obs_data)
+                        arr = np.array(flattened, dtype=np.float32)
+                    else:
+                        # Handle numpy array case
+                        arr = np.asarray(obs_data, dtype=np.float32)
+                    if max_shape is None or arr.size > max_shape:
+                        max_shape = arr.size
+            except Exception as e:
+                print(f"Error processing observation for agent {agent_id}: {str(e)}")
+                print(f"Observation data type: {type(obs_data)}")
+                print(f"Observation data shape: {np.array(obs_data).shape if hasattr(obs_data, 'shape') else 'no shape'}")
+                print(f"Observation data: {obs_data}")
+                raise
+        
+        # Second pass: process observations with consistent shape
         for agent_id, obs_data in obs.items():
             try:
                 if isinstance(obs_data, dict) and 'observation' in obs_data:
                     # Handle dictionary case with observation key
                     obs_arrays = obs_data['observation']
                     concatenated = np.concatenate([arr.flatten() for arr in obs_arrays])
-                    processed_obs[agent_id] = concatenated.astype(np.float32)
+                    # Pad or truncate to max_shape
+                    if concatenated.size < max_shape:
+                        padded = np.zeros(max_shape, dtype=np.float32)
+                        padded[:concatenated.size] = concatenated
+                        processed_obs[agent_id] = padded
+                    else:
+                        processed_obs[agent_id] = concatenated[:max_shape].astype(np.float32)
                 else:
                     # Handle direct array case
-                    print(f"Agent {agent_id} direct array observation shape: {np.array(obs_data).shape}")
-                    processed_obs[agent_id] = np.array(obs_data, dtype=np.float32).flatten()
+                    if isinstance(obs_data, (list, tuple)):
+                        # Recursively flatten the list and convert to array
+                        flattened = self._recursive_flatten(obs_data)
+                        arr = np.array(flattened, dtype=np.float32)
+                    else:
+                        # Handle numpy array case
+                        arr = np.asarray(obs_data, dtype=np.float32)
+                    arr = arr.flatten()
+                    # Pad or truncate to max_shape
+                    if arr.size < max_shape:
+                        padded = np.zeros(max_shape, dtype=np.float32)
+                        padded[:arr.size] = arr
+                        processed_obs[agent_id] = padded
+                    else:
+                        processed_obs[agent_id] = arr[:max_shape]
             except Exception as e:
                 print(f"Error processing observation for agent {agent_id}: {str(e)}")
+                print(f"Observation data type: {type(obs_data)}")
+                print(f"Observation data shape: {np.array(obs_data).shape if hasattr(obs_data, 'shape') else 'no shape'}")
                 print(f"Observation data: {obs_data}")
                 raise
+        
         self._live_agents += agents
         self._agents += agents
-        self._observations.update(obs)
+        self._observations.update(processed_obs)  # Use processed observations
         self._infos.update(infos)
         self._agent_id_to_index.update(id_map)
         self._possible_agents.update(agents)
@@ -384,3 +422,51 @@ class UnityPettingzooBaseEnv:
 
     def state(self):
         pass
+
+    def reset(self):
+        """
+        Resets the environment.
+        """
+        self._assert_loaded()
+        self._agent_index = 0
+        self._reset_states()
+        self._possible_agents = set()
+        self._env.reset()
+        for behavior_name in self._env.behavior_specs.keys():
+            _, _, _ = self._batch_update(behavior_name)
+        self._live_agents.sort()  # unnecessary, only for passing API test
+        self._dones = {agent: False for agent in self._agents}
+        self._rewards = {agent: 0 for agent in self._agents}
+        self._cumm_rewards = {agent: 0 for agent in self._agents}
+            
+        # Process observations for all agents
+        all_observations = []
+        for behavior_name in self._env.behavior_specs.keys():
+            _, _, _ = self._batch_update(behavior_name)
+        
+        # Extract and concatenate numeric observations for each agent
+        for agent_id, agent_data in self._observations.items():
+            try:
+                if isinstance(agent_data, dict) and 'observation' in agent_data:
+                    # Handle dictionary case with observation key
+                    obs_arrays = agent_data['observation']  # List of arrays
+                    concatenated_obs = np.concatenate([arr.flatten() for arr in obs_arrays])
+                else:
+                    # Handle direct array case
+                    if isinstance(agent_data, (list, tuple)):
+                        # Recursively flatten the list and convert to array
+                        flattened = self._recursive_flatten(agent_data)
+                        concatenated_obs = np.array(flattened, dtype=np.float32)
+                    else:
+                        # Handle numpy array case
+                        concatenated_obs = np.asarray(agent_data, dtype=np.float32).flatten()
+                all_observations.append(concatenated_obs)
+            except Exception as e:
+                print(f"Error processing observation for agent {agent_id}: {str(e)}")
+                print(f"Observation data type: {type(agent_data)}")
+                print(f"Observation data shape: {np.array(agent_data).shape if hasattr(agent_data, 'shape') else 'no shape'}")
+                print(f"Observation data: {agent_data}")
+                raise
+        
+        # Stack into a single array of shape [num_agents, total_obs_dim]
+        return np.stack(all_observations, axis=0).astype(np.float32)  # Force float32

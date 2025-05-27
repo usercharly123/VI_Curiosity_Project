@@ -29,7 +29,7 @@ class ActorCritic(nn.Module):
         ).to(self.device)
 
 
-    def forward(self, state):
+    def forward(self, state):   # For the onnx export only
         #state = torch.from_numpy(state).float().to(self.device)
         action_probs = self.action_layer(state)
         return action_probs
@@ -40,7 +40,7 @@ class ActorCritic(nn.Module):
         action_probs = self.action_layer(state)
         if permute:
             # Create permutation tensor on the same device as action_probs
-            perm = torch.tensor([2, 0, 3, 1, 4], device=self.device)
+            perm = torch.tensor([2, 4, 3, 1, 0], device=self.device)
             # Use torch.index_select for efficient permutation
             action_probs = action_probs.index_select(1, perm)
         dist = Categorical(action_probs)

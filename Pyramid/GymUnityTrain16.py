@@ -33,7 +33,7 @@ def main():
     if current_os == "linux":
         env_path = "Pyramid/Pyramid_linux_half/Pyramid_linux_half.x86_64"
     elif current_os == "windows":
-        env_path = 'Pyramid/Pyramid16half_agents'
+        env_path = 'Pyramid/Pyramids16half_agents'
 
     solved_reward = 1000     # stop training if avg_reward > solved_reward
     log_interval = 100     # print avg reward in the interval
@@ -66,7 +66,7 @@ def main():
     icm_path = os.path.join(model_dir, 'icm.pt')
 
     # Load the last saved policy and ICM if they exist
-    load_model = True
+    load_model = args.load_model
     permute = args.permute
     perturb = False
 
@@ -102,37 +102,55 @@ def main():
         print("Episode: ", i_episode)
         episode_rewards = np.zeros(16)
         episode_counter = np.zeros(16)
+        
+        # Initialize dones array
+        dones = np.zeros(16, dtype=bool)
+        
         for i in range(max_timesteps):
-            if timestep % 50 == 0:
-                print("Timestep: ", timestep)
             timestep += 1
             T += 1
             # Running policy_old:
             # Turn the states of type numpy_object_ to numpy array
             actions = agent.policy_old.act(np.array(state), memory, permute=permute)
+            
+            # Zero out actions for done agents
+            actions = np.array(actions)
+            actions[dones] = 0  # Set actions to 0 for done agents
+            
             state, rewards, dones, info = multi_env.step(list(actions))
             rewards = np.array(rewards)
-            #rewards += 2 * (rewards == 0) * (T < 1000)      # NOT FOR HALF-AGENT: adds 2 to the reward of each agent that had zero reward but is still within the early timesteps
             
-            dones = np.array(dones)
-
+            # Ensure dones is a boolean array with exactly 16 elements
+            dones = np.array(dones, dtype=bool)
+            if dones.size == 1:  # If dones is a scalar or single-element array
+                dones = np.full(16, dones.item(), dtype=bool)
+            elif dones.size != 16:  # If dones has wrong size
+                print(f"Warning: dones has unexpected size {dones.size}, reshaping to 16")
+                dones = np.resize(dones, 16)
+            
             episode_counter += dones
             T[dones] = 0
             # Saving reward and is_terminal:
             memory.rewards.append(rewards)
             memory.is_terminals.append(dones)
             
-            # If the episode is done, reset the environment
+            # If any agent is done, reset the environment
             if dones.any():
                 print(f"Episode {i_episode} done at timestep {i}")
                 state = multi_env.reset()  # Reset the environment when done = True
-
-            # update if its time
-            if timestep % update_timestep == 0:
-                agent.update(memory, timestep)
-                memory.clear_memory()
+                break  # End the episode loop
 
             episode_rewards += rewards
+            
+            if timestep % 50 == 0:
+                print("Timestep: ", timestep)
+                print("Rewards: ", episode_rewards)
+
+            # Update policy every 2048 timesteps
+            if timestep % 2048 == 0 and len(memory.states) > 0:
+                print(f"Updating policy at timestep {timestep}")
+                agent.update(memory, timestep)
+                memory.clear_memory()  # Clear memory after update
 
         if episode_counter.sum() == 0:
             episode_counter = np.ones(16)

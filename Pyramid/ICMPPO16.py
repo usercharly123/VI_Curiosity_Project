@@ -123,7 +123,7 @@ class ICMPPO:
             
             # Stack the rewards along a new axis
             rewards_np = np.stack(rewards_list)  # Shape: (N, 16, 1)
-            rewards = torch.tensor(rewards_np).to(self.device).detach()  # Shape: (N, 16, 1)
+            rewards = torch.tensor(rewards_np, dtype=torch.float32).to(self.device).detach()  # Shape: (N, 16, 1)
             rewards = rewards.permute(1, 0, 2)  # Shape: (16, N, 1)
             
             # Debug prints for rewards during policy update

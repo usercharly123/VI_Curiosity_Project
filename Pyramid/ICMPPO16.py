@@ -74,11 +74,13 @@ class ICMPPO:
         next_states = old_states[:, 1:, :] 
         actions = old_actions[:, :-1].long()
         
+        # Debug information
+        print("Memory rewards length:", len(memory.rewards))
+        print("First few rewards shapes:", [r.shape if hasattr(r, 'shape') else type(r) for r in memory.rewards[:5]])
+        print("First few rewards:", [r for r in memory.rewards[:5]])
+        
         # Ensure rewards are properly shaped
-        rewards_np = np.array(memory.rewards[:-1])
-        if rewards_np.ndim == 1:
-            # If rewards are 1D, reshape to match the expected shape
-            rewards_np = rewards_np.reshape(-1, 1)
+        rewards_np = np.array([r.reshape(-1, 1) if r.ndim == 1 else r for r in memory.rewards[:-1]])
         rewards = torch.tensor(rewards_np).T.to(self.device).detach()
         
         mask = (~torch.tensor(

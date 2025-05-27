@@ -92,13 +92,30 @@ class ICMPPO:
             
             # On Linux, rewards are 1D arrays, need to reshape
             rewards_list = []
-            for r in memory.rewards[:-1]:
+            for i, r in enumerate(memory.rewards[:-1]):
                 if r.ndim == 1:
                     r = r.reshape(-1, 1)  # Reshape to (16, 1)
+                elif r.ndim == 2:
+                    if r.shape[1] != 1:  # If not (16, 1), reshape
+                        r = r.reshape(-1, 1)
+                else:
+                    print(f"Warning: reward at index {i} has unexpected shape {r.shape}")
+                    r = r.reshape(-1, 1)  # Force reshape to (16, 1)
                 rewards_list.append(r)
+                if i < 5:  # Print first 5 processed rewards
+                    print(f"Processed reward {i} shape:", r.shape)
             
             print("Rewards list length:", len(rewards_list))
             print("First few processed rewards shapes:", [r.shape for r in rewards_list[:5]])
+            
+            # Verify all rewards have the same shape before stacking
+            shapes = [r.shape for r in rewards_list]
+            if not all(s == shapes[0] for s in shapes):
+                print("Error: Not all rewards have the same shape!")
+                for i, s in enumerate(shapes):
+                    if s != shapes[0]:
+                        print(f"Reward {i} has shape {s}, expected {shapes[0]}")
+                raise ValueError("Rewards have inconsistent shapes")
             
             # Stack the rewards along a new axis
             rewards_np = np.stack(rewards_list)  # Shape: (N, 16, 1)

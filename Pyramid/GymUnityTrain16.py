@@ -32,6 +32,9 @@ def main():
 
     if current_os == "linux":
         env_path = "Pyramid/Pyramids16_linux_half_agents/Pyramids16_linux_half_agents.x86_64"
+        # Set LD_LIBRARY_PATH for Linux
+        mono_path = os.path.join(os.path.dirname(env_path), "Pyramids16_linux_half_agents_Data/MonoBleedingEdge/x86_64")
+        os.environ["LD_LIBRARY_PATH"] = mono_path + ":" + os.environ.get("LD_LIBRARY_PATH", "")
     elif current_os == "windows":
         env_path = 'Pyramid/Pyramids16half_agents'
 

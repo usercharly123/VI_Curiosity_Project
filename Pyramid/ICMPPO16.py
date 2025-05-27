@@ -80,10 +80,9 @@ class ICMPPO:
         print("First few rewards:", [r for r in memory.rewards[:5]])
         
         # Process rewards based on their shape
-        rewards_np = np.array(memory.rewards[:-1])
-        if rewards_np.ndim == 1:
-            # If rewards are 1D (Linux), reshape to match expected shape
-            rewards_np = rewards_np.reshape(-1, 1)
+        # First convert all rewards to 2D arrays if they're 1D
+        rewards_list = [r.reshape(-1, 1) if r.ndim == 1 else r for r in memory.rewards[:-1]]
+        rewards_np = np.array(rewards_list)
         rewards = torch.tensor(rewards_np).T.to(self.device).detach()
         
         mask = (~torch.tensor(

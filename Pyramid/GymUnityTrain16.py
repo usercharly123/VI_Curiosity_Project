@@ -42,7 +42,7 @@ def main():
     log_interval = 100     # print avg reward in the interval
     max_episodes = args.max_episodes  # WAS 350      # max training episodes
     max_timesteps = 1000    # WAS 1000 max timesteps in one episode
-    update_timestep = 248  # WAS 2048 Replay buffer size, update policy every n timesteps
+    update_timestep = 2048  # WAS 2048 Replay buffer size, update policy every n timesteps
     
     print(f"Running on {current_os} for {max_episodes} episodes...")
 

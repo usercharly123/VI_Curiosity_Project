@@ -102,7 +102,13 @@ class ICMPPO:
 
         # Combine rewards based on reward_mode
         if self.reward_mode == 'both':
-            combined_rewards = (rewards + 0.1*intr_rewards) / 2
+            # Ensure both rewards have the same shape
+            if current_os == 'linux':
+                # On Linux, rewards are (16, 2047, 1) and intr_rewards are (16, 2047)
+                combined_rewards = (rewards.squeeze(-1) + 0.1*intr_rewards) / 2
+            else:  # Windows
+                # On Windows, both should already be in correct shape
+                combined_rewards = (rewards + 0.1*intr_rewards) / 2
         elif self.reward_mode == 'extrinsic':
             combined_rewards = rewards
         elif self.reward_mode == 'intrinsic':
@@ -119,7 +125,10 @@ class ICMPPO:
         with torch.no_grad():
             state_values = torch.squeeze(self.policy.value_layer(curr_states))  # Shape: (16, 2047)
             next_state_values = torch.squeeze(self.policy.value_layer(next_states))  # Shape: (16, 2047)
-            td_target = combined_rewards.squeeze(-1) + self.gamma * next_state_values * mask  # Shape: (16, 2047)
+            if current_os == 'linux':
+                td_target = combined_rewards.squeeze(-1) + self.gamma * next_state_values * mask  # Shape: (16, 2047)
+            else:
+                td_target = combined_rewards + self.gamma * next_state_values * mask  # Shape: (16, 2047)
             delta = td_target - state_values  # Shape: (16, 2047)
 
             self.writer.add_scalar('maxValue',

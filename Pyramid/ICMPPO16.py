@@ -81,11 +81,28 @@ class ICMPPO:
         
         # Process rewards based on OS
         if current_os == 'linux':
+            # Debug prints before processing
+            print("Memory rewards length:", len(memory.rewards))
+            print("First few rewards shapes:", [r.shape if hasattr(r, 'shape') else type(r) for r in memory.rewards[:5]])
+            print("First few rewards:", [r for r in memory.rewards[:5]])
+            
+            # Check if all rewards have the same shape
+            reward_shapes = [r.shape if hasattr(r, 'shape') else None for r in memory.rewards[:-1]]
+            print("All reward shapes:", reward_shapes)
+            
             # On Linux, rewards are 1D arrays, need to reshape
             rewards_list = [r.reshape(-1, 1) if r.ndim == 1 else r for r in memory.rewards[:-1]]
+            print("Rewards list length:", len(rewards_list))
+            print("First few processed rewards shapes:", [r.shape for r in rewards_list[:5]])
+            
             rewards_np = np.array(rewards_list)  # Shape: (2047, 16, 1)
             rewards = torch.tensor(rewards_np).to(self.device).detach()  # Shape: (2047, 16, 1)
             rewards = rewards.permute(1, 0, 2)  # Shape: (16, 2047, 1)
+            
+            # Debug prints for rewards during policy update
+            print("First few rewards in memory:", [r for r in memory.rewards[:5]])
+            print("Rewards tensor shape after processing:", rewards.shape)
+            print("Sample of rewards tensor values:", rewards[0, :5, 0])  # First agent, first 5 timesteps
         else:  # Windows
             # On Windows, rewards are already in correct shape
             rewards_np = np.array(memory.rewards[:-1])

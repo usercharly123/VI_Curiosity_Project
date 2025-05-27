@@ -42,7 +42,7 @@ def main():
     log_interval = 100     # print avg reward in the interval
     max_episodes = args.max_episodes  # WAS 350      # max training episodes
     max_timesteps = 1000    # WAS 1000 max timesteps in one episode
-    update_timestep = 248  # WAS 2048 Replay buffer size, update policy every n timesteps
+    update_timestep = 2048  # WAS 2048 Replay buffer size, update policy every n timesteps
     
     print(f"Running on {current_os} for {max_episodes} episodes...")
 
@@ -128,6 +128,10 @@ def main():
                 # On Linux, ensure rewards are 1D array
                 if rewards.ndim == 2:
                     rewards = rewards.flatten()
+            else:  # Windows
+                # On Windows, ensure rewards are 2D array
+                if rewards.ndim == 1:
+                    rewards = rewards.reshape(-1, 1)
             
             # Ensure dones is a boolean array with exactly 16 elements
             dones = np.array(dones, dtype=bool)

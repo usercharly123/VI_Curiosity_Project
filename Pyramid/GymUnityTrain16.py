@@ -17,6 +17,53 @@ from onnx_wrapper import ONNXWrapper
 
 import time
 
+class CustomUnityEnv(UnityPettingzooBaseEnv):
+    def __init__(self, env):
+        super().__init__(env)
+        self.all_dones = np.zeros(16, dtype=bool)
+        self.all_rewards = np.full(16, -0.001, dtype=np.float32)
+        self.last_state = None  # Store the last valid state
+    
+    def step(self, actions):
+        next_state, rewards, dones, info = super().step(actions)
+        
+        # Update the done flags for all agents
+        if not isinstance(dones, dict):
+            # If dones is a single value
+            if dones.size == 1 and dones.item():
+                # Get the current agent's name from the environment
+                current_agent = self._agents[self._agent_index]
+                print("AGENT", current_agent, "done:", dones.item())
+                print("STATE", next_state.shape, "REWARDS", rewards)
+                # Extract agent_id from the name format "Pyramids?team=0?agent_id=X"
+                try:
+                    agent_id = int(current_agent.split('agent_id=')[1])
+                    self.all_dones[agent_id] = True
+                    self.all_rewards[agent_id] = np.float32(rewards)
+                    # Create a copy of the last valid state
+                    full_state = self.last_state.copy()
+                    # Update only the state for the non-done agents
+                    for i, is_done in enumerate(self.all_dones):
+                        if not is_done and i < next_state.shape[0]:
+                            full_state[i] = next_state[i]
+                    next_state = full_state
+                except (IndexError, ValueError):
+                    print(f"Warning: Could not parse agent ID from {current_agent}")
+        
+        else:
+            self.all_dones = dones
+            self.all_rewards = np.array(rewards, dtype=np.float32)
+            self.last_state = next_state.copy()
+        
+        return next_state, self.all_rewards, self.all_dones, info
+    
+    def reset(self):
+        state = super().reset()
+        self.all_dones = np.zeros(16, dtype=bool)
+        self.all_rewards = np.full(16, -0.001, dtype=np.float32)
+        self.last_state = state.copy()  # Store the initial state
+        return state
+
 def main():
     
     parser = argparse.ArgumentParser(description="Train agent in Unity environment")
@@ -36,19 +83,19 @@ def main():
         mono_path = os.path.join(os.path.dirname(env_path), "Pyramids16_linux_half_agents_Data/MonoBleedingEdge/x86_64")
         os.environ["LD_LIBRARY_PATH"] = mono_path + ":" + os.environ.get("LD_LIBRARY_PATH", "")
     elif current_os == "windows":
-        env_path = 'Pyramid/Pyramids16half_agents'
+        env_path = 'Pyramid/Pyramids16_windows_half_agents'
 
     solved_reward = 1000     # stop training if avg_reward > solved_reward
     log_interval = 100     # print avg reward in the interval
     max_episodes = args.max_episodes  # WAS 350      # max training episodes
     max_timesteps = 1000    # WAS 1000 max timesteps in one episode
-    update_timestep = 2048  # WAS 2048 Replay buffer size, update policy every n timesteps
+    update_timestep = 200  # WAS 2048 Replay buffer size, update policy every n timesteps
     
     print(f"Running on {current_os} for {max_episodes} episodes...")
 
     # Initialize Unity env
     unity_env = UnityEnvironment(env_path, no_graphics=not args.graphics, seed=42)
-    multi_env = UnityPettingzooBaseEnv(unity_env)
+    multi_env = CustomUnityEnv(unity_env)
 
     # Choose the reward mode
     reward_mode = args.reward_mode
@@ -61,7 +108,7 @@ def main():
     memory = Memory()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    agent = ICMPPO(writer=writer, device=device, reward_mode=reward_mode)
+    agent = ICMPPO(writer=writer, device=device, reward_mode=reward_mode, lr=3e-6)
 
     # Path to the saved models
     model_dir = f'Pyramid/models/'
@@ -122,20 +169,13 @@ def main():
             
             state, rewards, dones, info = multi_env.step(list(actions))
             rewards = np.array(rewards)
+            dones = np.array(dones, dtype=bool)
             
             # Handle rewards differently based on OS
             if current_os == "linux":
                 # On Linux, ensure rewards are 1D array
                 if rewards.ndim == 2:
                     rewards = rewards.flatten()
-            
-            # Ensure dones is a boolean array with exactly 16 elements
-            dones = np.array(dones, dtype=bool)
-            if dones.size == 1:  # If dones is a scalar or single-element array
-                dones = np.full(16, dones.item(), dtype=bool)
-            elif dones.size != 16:  # If dones has wrong size
-                print(f"Warning: dones has unexpected size {dones.size}, reshaping to 16")
-                dones = np.resize(dones, 16)
             
             episode_counter += dones
             T[dones] = 0
@@ -146,6 +186,9 @@ def main():
             # If any agent is done, reset the environment
             if dones.any():
                 print(f"Episode {i_episode} done at timestep {i}")
+                # print the rewards of the agents that are done
+                print("Rewards: ", rewards)
+                print("Dones: ", dones)
                 state = multi_env.reset()  # Reset the environment when done = True
                 break  # End the episode loop
 
@@ -153,7 +196,7 @@ def main():
             
             if timestep % 100 == 0:
                 print("Timestep: ", timestep)
-                print("Rewards: ", episode_rewards)
+                print("Episode rewards: ", episode_rewards)
 
             # Update policy every 2048 timesteps
             if timestep % update_timestep == 0 and len(memory.states) > 0:

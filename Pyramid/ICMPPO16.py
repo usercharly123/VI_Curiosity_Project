@@ -45,7 +45,7 @@ class ICMPPO:
 
         self.MseLoss = nn.MSELoss(reduction='none')
 
-    def update(self, memory, timestep, current_os='windows'):
+    def update(self, memory, timestep, current_os="linux"):
         # Convert lists from memory to tensors
         self.timestep = timestep
         
@@ -74,71 +74,14 @@ class ICMPPO:
         next_states = old_states[:, 1:, :] 
         actions = old_actions[:, :-1].long()
         
-        # Debug information
-        print("Memory rewards length:", len(memory.rewards))
-        print("First few rewards shapes:", [r.shape if hasattr(r, 'shape') else type(r) for r in memory.rewards[:5]])
-        print("First few rewards:", [r for r in memory.rewards[:5]])
+        rewards_np = np.array(memory.rewards[:-1])  # each reward is a list of 16 elements so rewards_np is (N, 16) 
+        rewards = torch.tensor(rewards_np).T.to(self.device).detach()
         
-        # Process rewards based on OS
-        if current_os == 'linux':
-            # Debug prints before processing
-            print("Memory rewards length:", len(memory.rewards))
-            print("First few rewards shapes:", [r.shape if hasattr(r, 'shape') else type(r) for r in memory.rewards[:5]])
-            print("First few rewards:", [r for r in memory.rewards[:5]])
-            
-            # Check if all rewards have the same shape
-            reward_shapes = [r.shape if hasattr(r, 'shape') else None for r in memory.rewards[:-1]]
-            print("All reward shapes:", reward_shapes)
-            
-            # On Linux, rewards are 1D arrays, need to reshape
-            rewards_list = []
-            for i, r in enumerate(memory.rewards[:-1]):
-                # Handle different reward shapes
-                if r.ndim == 1:
-                    if r.size == 1:  # Single value (done agent)
-                        r = np.full(16, -0.001).reshape(-1, 1)  # Pad with -0.001
-                    else:
-                        r = r.reshape(-1, 1)  # Reshape to (16, 1)
-                elif r.ndim == 2:
-                    if r.shape[1] != 1:  # If not (16, 1), reshape
-                        r = r.reshape(-1, 1)
-                else:
-                    print(f"Warning: reward at index {i} has unexpected shape {r.shape}")
-                    r = np.full(16, -0.001).reshape(-1, 1)  # Force reshape to (16, 1)
-                rewards_list.append(r)
-                if i < 5:  # Print first 5 processed rewards
-                    print(f"Processed reward {i} shape:", r.shape)
-            
-            print("Rewards list length:", len(rewards_list))
-            print("First few processed rewards shapes:", [r.shape for r in rewards_list[:5]])
-            
-            # Verify all rewards have the same shape before stacking
-            shapes = [r.shape for r in rewards_list]
-            if not all(s == shapes[0] for s in shapes):
-                print("Error: Not all rewards have the same shape!")
-                for i, s in enumerate(shapes):
-                    if s != shapes[0]:
-                        print(f"Reward {i} has shape {s}, expected {shapes[0]}")
-                raise ValueError("Rewards have inconsistent shapes")
-            
-            # Stack the rewards along a new axis
-            rewards_np = np.stack(rewards_list)  # Shape: (N, 16, 1)
-            rewards = torch.tensor(rewards_np, dtype=torch.float32).to(self.device).detach()  # Shape: (N, 16, 1)
-            rewards = rewards.permute(1, 0, 2)  # Shape: (16, N, 1)
-            
-            # Debug prints for rewards during policy update
-            print("First few rewards in memory:", [r for r in memory.rewards[:5]])
-            print("Rewards tensor shape after processing:", rewards.shape)
-            print("Sample of rewards tensor values:", rewards[0, :5, 0])  # First agent, first 5 timesteps
-        else:  # Windows
-            # On Windows, rewards are already in correct shape
-            rewards_np = np.array(memory.rewards[:-1])
-            if rewards_np.ndim == 3:
-                print("Rewards tensor shape before processing:", rewards_np.shape)
-                rewards_np = rewards_np.squeeze(-1)  # (N, 16)
-                print("Rewards tensor shape after processing:", rewards_np.shape)
-            rewards_np = rewards_np.T  # (16, N)
-            rewards = torch.tensor(rewards_np).to(self.device).detach()
+        # print the total rewards of each agent
+        total_extr_rewards = rewards.sum(dim=1)
+        print("Extrinsic rewards shape:", rewards.shape)
+        print("total extrinsic reward shape:", total_extr_rewards.shape)
+        print(f"Total extrinsic rewards for each agent: {total_extr_rewards.cpu().numpy()}")
         
         mask = (~torch.tensor(
             np.array(memory.is_terminals),
@@ -148,16 +91,14 @@ class ICMPPO:
         with torch.no_grad():
             intr_reward, _, _ = self.icm(actions, curr_states, next_states, mask)
         intr_rewards = torch.clamp(self.intr_reward_strength * intr_reward, 0, 1)
+        total_intr_rewards = intr_rewards.sum(dim=1)
+        print("Intrinsic rewards shape:",intr_rewards.shape)
+        print("Total intrinsic rewards shape:", total_intr_rewards.shape)
+        print(f"Total intrinsic rewards for each agent: {0.1*total_intr_rewards.cpu().numpy()}")
 
         # Combine rewards based on reward_mode
         if self.reward_mode == 'both':
-            # Ensure both rewards have the same shape
-            if current_os == 'linux':
-                # On Linux, rewards are (16, 2047, 1) and intr_rewards are (16, 2047)
-                combined_rewards = (rewards.squeeze(-1) + 0.1*intr_rewards) / 2
-            else:  # Windows
-                # On Windows, both should already be in correct shape
-                combined_rewards = (rewards + 0.1*intr_rewards) / 2
+            combined_rewards = (rewards + 0.1*intr_rewards) / 2
         elif self.reward_mode == 'extrinsic':
             combined_rewards = rewards
         elif self.reward_mode == 'intrinsic':
@@ -172,13 +113,10 @@ class ICMPPO:
 
         # Finding cumulative advantage
         with torch.no_grad():
-            state_values = torch.squeeze(self.policy.value_layer(curr_states))  # Shape: (16, 2047)
-            next_state_values = torch.squeeze(self.policy.value_layer(next_states))  # Shape: (16, 2047)
-            if current_os == 'linux':
-                td_target = combined_rewards.squeeze(-1) + self.gamma * next_state_values * mask  # Shape: (16, 2047)
-            else:
-                td_target = combined_rewards + self.gamma * next_state_values * mask  # Shape: (16, 2047)
-            delta = td_target - state_values  # Shape: (16, 2047)
+            state_values = torch.squeeze(self.policy.value_layer(curr_states))
+            next_state_values = torch.squeeze(self.policy.value_layer(next_states))
+            td_target = combined_rewards + self.gamma * next_state_values * mask
+            delta = td_target - state_values
 
             self.writer.add_scalar('maxValue',
                                    state_values.max(),
@@ -189,14 +127,14 @@ class ICMPPO:
                                    self.timestep
                                    )
 
-            advantage = torch.zeros(16, 1).to(self.device)      
+            advantage = torch.zeros(1, 16).to(self.device)      
             advantage_lst = []
             for i in range(delta.size(1) - 1, -1, -1):
-                delta_t, mask_t = delta[:, i:i+1], mask[:, i:i+1]  # Keep dimensions
+                delta_t, mask_t = delta[:, i], mask[:, i]
                 advantage = delta_t + (self.gamma * self.lambd * advantage) * mask_t
                 advantage_lst.insert(0, advantage)
 
-            advantage_lst = torch.cat(advantage_lst, dim=1)  # Shape: (16, 2047)
+            advantage_lst = torch.cat(advantage_lst, dim=0).T
             # Get local advantage to train value function
             local_advantages = state_values + advantage_lst
             # Normalizing the advantage

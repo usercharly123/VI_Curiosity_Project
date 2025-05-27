@@ -37,7 +37,10 @@ class ICM(nn.Module):
         out = self.fc_i1(torch.cat((curr_enc, next_enc), dim=2))    
         out = self.act_i1(out)
         pred_act = torch.transpose(self.fc_i2(out), 1, 2)
-        inv_loss = (nn.CrossEntropyLoss(reduction='none')(pred_act, act)*mask).mean() # the * MASK is for what ???
+        
+        # Ensure act is of type Long for cross entropy loss
+        act = act.long()
+        inv_loss = (nn.CrossEntropyLoss(reduction='none')(pred_act, act)*mask).mean()
 
         # Forward model
         one_hot_act = nn.functional.one_hot(act, num_classes=self.act_dim)

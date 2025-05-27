@@ -108,7 +108,7 @@ def main():
     memory = Memory()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    agent = ICMPPO(writer=writer, device=device, reward_mode=reward_mode, lr=3e-6)
+    agent = ICMPPO(writer=writer, device=device, reward_mode=reward_mode, lr=3e-4)
 
     # Path to the saved models
     model_dir = f'Pyramid/models/'

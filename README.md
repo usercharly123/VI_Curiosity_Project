@@ -37,6 +37,7 @@ To work in the Pyramid environment, you can **either** take the original environ
 ### Training the agent
 Begin by activating the conda environment
 ```bash
+source ~/miniconda3/etc/profile.d/conda.sh
 conda activate curiosity
 ```
 

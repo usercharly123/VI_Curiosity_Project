@@ -123,9 +123,11 @@ def main():
             state, rewards, dones, info = multi_env.step(list(actions))
             rewards = np.array(rewards)
             
-            # Ensure rewards have consistent shape (16, 1)
-            if rewards.ndim == 1:
-                rewards = rewards.reshape(-1, 1)
+            # Handle rewards differently based on OS
+            if current_os == "linux":
+                # On Linux, ensure rewards are 1D array
+                if rewards.ndim == 2:
+                    rewards = rewards.flatten()
             
             # Ensure dones is a boolean array with exactly 16 elements
             dones = np.array(dones, dtype=bool)

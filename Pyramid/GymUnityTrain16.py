@@ -68,6 +68,7 @@ def main():
     
     parser = argparse.ArgumentParser(description="Train agent in Unity environment")
     parser.add_argument("--max-episodes", type=int, default=50, help="Maximum number of training episodes")
+    parser.add_argument("--update-timestep", type=int, default=2048, help="Update policy every n timesteps")
     parser.add_argument("--os", type=str, choices=["linux", "windows"], required=True, help="Operating system (linux or windows)", default="linux")
     parser.add_argument("--reward_mode", type=str, choices=["intrinsic", "extrinsic", "both"], default="both", help="Reward mode to use (intrinsic, extrinsic, or both)")
     parser.add_argument("--graphics", action='store_true', help="Whether to visualize the agent during training")
@@ -89,7 +90,7 @@ def main():
     log_interval = 100     # print avg reward in the interval
     max_episodes = args.max_episodes  # WAS 350      # max training episodes
     max_timesteps = 1000    # WAS 1000 max timesteps in one episode
-    update_timestep = 200  # WAS 2048 Replay buffer size, update policy every n timesteps
+    update_timestep = args.update_timestep  # update policy every n timesteps
     
     print(f"Running on {current_os} for {max_episodes} episodes...")
 

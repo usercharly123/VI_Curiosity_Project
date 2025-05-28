@@ -9,7 +9,8 @@ from utils import Swish, linear_decay_beta, linear_decay_lr, linear_decay_eps
 class ICMPPO:
     def __init__(self, writer, state_dim=172, action_dim=5, n_latent_var=512, lr=3e-4, betas=(0.9, 0.999),
                  gamma=0.99, ppo_epochs=3, icm_epochs=1, eps_clip=0.2, ppo_batch_size=128,
-                 icm_batch_size=16, intr_reward_strength=0.02, lamb=0.95, device='cpu', reward_mode='both', decaying_lr=False):
+                 icm_batch_size=16, intr_reward_strength=0.02, lamb=0.95, device='cpu', reward_mode='both', 
+                 decaying_lr=False, max_episodes=350, last_epoch=1):
         self.lr = lr
         self.betas = betas
         self.gamma = gamma
@@ -53,7 +54,7 @@ class ICMPPO:
         # Initialize learning rate scheduler with warm-up and cosine decay
         def lr_lambda(step):
             # Warm-up for first 10% of training
-            warmup_steps = 350 * 0.1  # 10% of total episodes
+            warmup_steps = max_episodes * 0.1  # 10% of total episodes
             if step < warmup_steps:
                 return step / warmup_steps
             # Cosine decay for remaining 90%
@@ -63,7 +64,8 @@ class ICMPPO:
         if decaying_lr:
             self.scheduler = torch.optim.lr_scheduler.LambdaLR( 
                 self.optimizer,
-                lr_lambda
+                lr_lambda,
+                last_epoch=last_epoch-1  # -1 because PyTorch increments before computing lr
             )
         else:
             self.scheduler = None

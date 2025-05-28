@@ -70,6 +70,7 @@ def main():
     parser.add_argument("--max-episodes", type=int, default=50, help="Maximum number of training episodes")
     parser.add_argument("--update-timestep", type=int, default=2048, help="Update policy every n timesteps")
     parser.add_argument("--os", type=str, choices=["linux", "windows"], required=True, help="Operating system (linux or windows)", default="linux")
+    parser.add_argument("--half_agents", action='store_true', help="Use half environment with 16 agents")
     parser.add_argument("--reward_mode", type=str, choices=["intrinsic", "extrinsic", "both"], default="both", help="Reward mode to use (intrinsic, extrinsic, or both)")
     parser.add_argument("--graphics", action='store_true', help="Whether to visualize the agent during training")
     parser.add_argument("--load_model", action='store_true', help="Whether to load the last saved model")
@@ -82,7 +83,10 @@ def main():
     current_os = args.os
 
     if current_os == "linux":
-        env_path = "Pyramid/Pyramids16_linux_agents/Pyramids16_linux_half_agents.x86_64"
+        if args.half_agents:
+            env_path = "Pyramid/Pyramids16_linux_half_agents/Pyramids16_linux_half_agents.x86_64"
+        else:
+            env_path = "Pyramid/Pyramids16_linux_agents/Pyramids16_linux_agents.x86_64"
         # Set LD_LIBRARY_PATH for Linux
         mono_path = os.path.join(os.path.dirname(env_path), "Pyramids16_linux_half_agents_Data/MonoBleedingEdge/x86_64")
         os.environ["LD_LIBRARY_PATH"] = mono_path + ":" + os.environ.get("LD_LIBRARY_PATH", "")
@@ -116,8 +120,8 @@ def main():
                    max_episodes=max_episodes, last_epoch=args.last_epoch)
 
     # Path to the saved models
-    model_dir = os.path.join('Pyramid', 'models', reward_mode)
-    ppo_path = os.path.join(model_dir, 'ppo300.pt')
+    model_dir = os.path.join('Pyramid', 'models')
+    ppo_path = os.path.join(model_dir, 'ppo_orig.pt')
     icm_path = os.path.join(model_dir, 'icm300.pt')
 
     # Load the last saved policy and ICM if they exist

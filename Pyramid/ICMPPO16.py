@@ -58,7 +58,7 @@ class ICMPPO:
             if step < warmup_steps:
                 return step / warmup_steps
             # Cosine decay for remaining 90%
-            progress = (step - warmup_steps) / (350 - warmup_steps)
+            progress = (step - warmup_steps) / (max_episodes - warmup_steps)
             return 0.5 * (1 + np.cos(np.pi * progress))  # Decays from 1 to 0.5
         
         if decaying_lr:

@@ -72,7 +72,7 @@ def main():
     parser.add_argument("--os", type=str, choices=["linux", "windows"], required=True, help="Operating system (linux or windows)", default="linux")
     parser.add_argument("--reward_mode", type=str, choices=["intrinsic", "extrinsic", "both"], default="both", help="Reward mode to use (intrinsic, extrinsic, or both)")
     parser.add_argument("--graphics", action='store_true', help="Whether to visualize the agent during training")
-    parser.add_argument("--load_model", action='store_true', help="Whether to load the last saved model")
+    parser.add_argument("--load_model", type=str, default=None, help="Path to the model file to load (e.g., 'models/both/ppo.pt')")
     parser.add_argument("--permute", action='store_true', help="Whether to permute the state space of the agent")
     parser.add_argument("--perturb", action='store_true', help="Whether to perturb the weights of the policy with Gaussian noise")
     args = parser.parse_args()
@@ -80,7 +80,7 @@ def main():
     current_os = args.os
 
     if current_os == "linux":
-        env_path = "Pyramid/Pyramid16_linux_half_agents/Pyramids16_linux_half_agents.x86_64"
+        env_path = "Pyramid/Pyramids16_linux_half_agents/Pyramids16_linux_half_agents.x86_64"
         # Set LD_LIBRARY_PATH for Linux
         mono_path = os.path.join(os.path.dirname(env_path), "Pyramids16_linux_half_agents_Data/MonoBleedingEdge/x86_64")
         os.environ["LD_LIBRARY_PATH"] = mono_path + ":" + os.environ.get("LD_LIBRARY_PATH", "")
@@ -114,11 +114,11 @@ def main():
 
     # Path to the saved models
     model_dir = f'Pyramid/models/'
-    ppo_path = os.path.join(model_dir, 'ppo_orig.pt')
+    ppo_path = args.load_model if args.load_model else os.path.join(model_dir, 'ppo_orig.pt')
     icm_path = os.path.join(model_dir, 'icm.pt')
 
     # Load the last saved policy and ICM if they exist
-    load_model = args.load_model
+    load_model = args.load_model is not None
     permute = args.permute
     perturb = args.perturb
 

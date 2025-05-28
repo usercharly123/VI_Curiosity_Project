@@ -72,7 +72,7 @@ def main():
     parser.add_argument("--os", type=str, choices=["linux", "windows"], required=True, help="Operating system (linux or windows)", default="linux")
     parser.add_argument("--reward_mode", type=str, choices=["intrinsic", "extrinsic", "both"], default="both", help="Reward mode to use (intrinsic, extrinsic, or both)")
     parser.add_argument("--graphics", action='store_true', help="Whether to visualize the agent during training")
-    parser.add_argument("--load_model", type=str, default=None, help="Path to the model file to load (e.g., 'models/both/ppo.pt')")
+    parser.add_argument("--load_model", action='store_true', help="Whether to load the last saved model")
     parser.add_argument("--permute", action='store_true', help="Whether to permute the state space of the agent")
     parser.add_argument("--perturb", action='store_true', help="Whether to perturb the weights of the policy with Gaussian noise")
     args = parser.parse_args()
@@ -105,7 +105,6 @@ def main():
     log_dir = 'Pyramid/events/' + reward_mode + '/'
 
     # Initialize log_writer, memory buffer, icmppo
-
     writer = SummaryWriter(log_dir)
     memory = Memory()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -113,15 +112,12 @@ def main():
     agent = ICMPPO(writer=writer, device=device, reward_mode=reward_mode, lr=3e-4)
 
     # Path to the saved models
-    model_dir = f'Pyramid/models/both'
-    ppo_path = os.path.join(ppo_path, 'ppo100.pt')
-    icm_path = os.path.join(icm_path, 'icm100.pt')
-    print(f"Using PPO path: {ppo_path}")
-    print(f"Using ICM path: {icm_path}")
-    print(os.path.exists(ppo_path), os.path.exists(icm_path))
+    model_dir = os.path.join('Pyramid', 'models', reward_mode)
+    ppo_path = os.path.join(model_dir, 'ppo100.pt')
+    icm_path = os.path.join(model_dir, 'icm100.pt')
 
     # Load the last saved policy and ICM if they exist
-    load_model = args.load_model is not None
+    load_model = args.load_model
     permute = args.permute
     perturb = args.perturb
 
@@ -151,6 +147,8 @@ def main():
                     for name, param in agent.policy_old.named_parameters():
                         param.add_(perturbations[name])
                 
+                print("Applied identical perturbations to both networks")
+            
         if os.path.exists(icm_path):
             print(f"Loading ICM weights from {icm_path}")
             agent.icm.load_state_dict(torch.load(icm_path, map_location=device))

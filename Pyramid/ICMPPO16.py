@@ -26,12 +26,15 @@ class ICMPPO:
         self.reward_mode = reward_mode  # Can be 'both', 'extrinsic', or 'intrinsic'
         self.icm = ICM(activation=Swish()).to(self.device)
 
+        # Create policy network
         self.policy = ActorCritic(state_dim=state_dim,
                                   action_dim=action_dim,
                                   n_latent_var=n_latent_var,
                                   activation=Swish(),
                                   device=self.device,
                                   ).to(self.device)
+        
+        # Create old policy network
         self.policy_old = ActorCritic(state_dim,
                                       action_dim,
                                       n_latent_var,
@@ -39,10 +42,13 @@ class ICMPPO:
                                       device=self.device
                                       ).to(self.device)
 
+        # Copy weights from policy to policy_old
+        state_dict = self.policy.state_dict()
+        self.policy_old.load_state_dict(state_dict)
+
+
         self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=lr, betas=betas)
         self.optimizer_icm = torch.optim.Adam(self.icm.parameters(), lr=lr, betas=betas)
-        self.policy_old.load_state_dict(self.policy.state_dict())
-
         self.MseLoss = nn.MSELoss(reduction='none')
 
     def update(self, memory, timestep, current_os="linux"):
@@ -117,6 +123,7 @@ class ICMPPO:
             next_state_values = torch.squeeze(self.policy.value_layer(next_states))
             td_target = combined_rewards + self.gamma * next_state_values * mask
             delta = td_target - state_values
+            print("Delta shape:", delta.shape)
 
             self.writer.add_scalar('maxValue',
                                    state_values.max(),
@@ -157,7 +164,17 @@ class ICMPPO:
                 # Finding actions logprobs and states values
                 batch_logprobs, batch_state_values, batch_dist_entropy = self.policy.evaluate(batch_curr_states,
                                                                                               batch_actions)
-
+                
+                # Compare old and new policy outputs
+                with torch.no_grad():
+                    
+                    # Get intermediate values for both policies
+                    new_body = self.policy.body(batch_curr_states)
+                    old_body = self.policy_old.body(batch_curr_states)
+                    
+                    new_probs = self.policy.action_layer(batch_curr_states)
+                    old_probs = self.policy_old.action_layer(batch_curr_states)
+                
                 # Finding the ratio (pi_theta / pi_theta__old):
                 ratios = torch.exp(batch_logprobs - batch_old_logprobs.detach())
 

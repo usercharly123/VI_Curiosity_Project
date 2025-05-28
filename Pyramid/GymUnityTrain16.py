@@ -114,8 +114,8 @@ def main():
 
     # Path to the saved models
     model_dir = f'Pyramid/models/'
-    ppo_path = args.load_model if args.load_model else os.path.join(model_dir, 'ppo_orig.pt')
-    icm_path = os.path.join(model_dir, 'icm.pt')
+    ppo_path = args.load_model if args.load_model else os.path.join(model_dir, 'ppo100.pt')
+    icm_path = os.path.join(model_dir, 'icm100.pt')
 
     # Load the last saved policy and ICM if they exist
     load_model = args.load_model is not None

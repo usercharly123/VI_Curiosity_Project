@@ -4,7 +4,7 @@ import numpy as np
 
 def main():
 
-    onnx_path = "models/both"
+    onnx_path = "Pyramid/models/both"
     model = onnx.load(onnx_path + "/Pyramid.onnx")
 
     # --- version_number as float32, shape [1], value [3.0] ---

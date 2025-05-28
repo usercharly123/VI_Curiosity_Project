@@ -75,6 +75,8 @@ def main():
     parser.add_argument("--load_model", action='store_true', help="Whether to load the last saved model")
     parser.add_argument("--permute", action='store_true', help="Whether to permute the state space of the agent")
     parser.add_argument("--perturb", action='store_true', help="Whether to perturb the weights of the policy with Gaussian noise")
+    parser.add_argument("--scheduler", action='store_true', help="Whether to use a learning rate scheduler")
+    parser.add_argument("--last_epoch", type=int, default=0, help="Last epoch of the training")
     args = parser.parse_args()
 
     current_os = args.os
@@ -109,12 +111,13 @@ def main():
     memory = Memory()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    agent = ICMPPO(writer=writer, device=device, reward_mode=reward_mode, lr=3e-4)
+    agent = ICMPPO(writer=writer, device=device, reward_mode=reward_mode, lr=3e-4, decaying_lr=args.scheduler, 
+                   max_episodes=max_episodes, last_epoch=args.last_epoch)
 
     # Path to the saved models
     model_dir = os.path.join('Pyramid', 'models', reward_mode)
-    ppo_path = os.path.join(model_dir, 'ppo100.pt')
-    icm_path = os.path.join(model_dir, 'icm100.pt')
+    ppo_path = os.path.join(model_dir, 'ppo300.pt')
+    icm_path = os.path.join(model_dir, 'icm300.pt')
 
     # Load the last saved policy and ICM if they exist
     load_model = args.load_model

@@ -9,7 +9,7 @@ from utils import Swish, linear_decay_beta, linear_decay_lr, linear_decay_eps
 class ICMPPO:
     def __init__(self, writer, state_dim=172, action_dim=5, n_latent_var=512, lr=3e-4, betas=(0.9, 0.999),
                  gamma=0.99, ppo_epochs=3, icm_epochs=1, eps_clip=0.2, ppo_batch_size=128,
-                 icm_batch_size=16, intr_reward_strength=0.02, lamb=0.95, device='cpu', reward_mode='both'):
+                 icm_batch_size=16, intr_reward_strength=0.02, lamb=0.95, device='cpu', reward_mode='both', decaying_lr=False):
         self.lr = lr
         self.betas = betas
         self.gamma = gamma
@@ -60,10 +60,13 @@ class ICMPPO:
             progress = (step - warmup_steps) / (350 - warmup_steps)
             return 0.5 * (1 + np.cos(np.pi * progress))  # Decays from 1 to 0.5
         
-        self.scheduler = torch.optim.lr_scheduler.LambdaLR(
-            self.optimizer,
-            lr_lambda
-        )
+        if decaying_lr:
+            self.scheduler = torch.optim.lr_scheduler.LambdaLR( 
+                self.optimizer,
+                lr_lambda
+            )
+        else:
+            self.scheduler = None
         
         self.optimizer_icm = torch.optim.Adam(self.icm.parameters(), lr=lr, betas=betas)
         self.MseLoss = nn.MSELoss(reduction='none')
@@ -181,16 +184,6 @@ class ICMPPO:
                 # Finding actions logprobs and states values
                 batch_logprobs, batch_state_values, batch_dist_entropy = self.policy.evaluate(batch_curr_states,
                                                                                               batch_actions)
-                
-                # Compare old and new policy outputs
-                with torch.no_grad():
-                    
-                    # Get intermediate values for both policies
-                    new_body = self.policy.body(batch_curr_states)
-                    old_body = self.policy_old.body(batch_curr_states)
-                    
-                    new_probs = self.policy.action_layer(batch_curr_states)
-                    old_probs = self.policy_old.action_layer(batch_curr_states)
                 
                 # Finding the ratio (pi_theta / pi_theta__old):
                 ratios = torch.exp(batch_logprobs - batch_old_logprobs.detach())

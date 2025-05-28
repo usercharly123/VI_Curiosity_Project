@@ -84,6 +84,7 @@ def main():
 
     if current_os == "linux":
         if args.half_agents:
+            print("Using half agents environment")
             env_path = "Pyramid/Pyramids16_linux_half_agents/Pyramids16_linux_half_agents.x86_64"
         else:
             env_path = "Pyramid/Pyramids16_linux_agents/Pyramids16_linux_agents.x86_64"

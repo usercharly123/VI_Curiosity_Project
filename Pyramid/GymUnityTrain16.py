@@ -96,6 +96,7 @@ def main():
     update_timestep = args.update_timestep  # update policy every n timesteps
     
     print(f"Running on {current_os} for {max_episodes} episodes...")
+    print(f"Schediuler: {args.scheduler}, Permute: {args.permute}, Perturb: {args.perturb}")
 
     # Initialize Unity env
     unity_env = UnityEnvironment(env_path, no_graphics=not args.graphics, seed=42)

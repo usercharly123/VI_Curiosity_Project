@@ -46,8 +46,25 @@ class ICMPPO:
         state_dict = self.policy.state_dict()
         self.policy_old.load_state_dict(state_dict)
 
-
-        self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=lr, betas=betas)
+        self.optimizer = torch.optim.Adam([
+            {'params': self.policy.parameters(), 'lr': self.lr}
+        ])
+        
+        # Initialize learning rate scheduler with warm-up and cosine decay
+        def lr_lambda(step):
+            # Warm-up for first 10% of training
+            warmup_steps = 350 * 0.1  # 10% of total episodes
+            if step < warmup_steps:
+                return step / warmup_steps
+            # Cosine decay for remaining 90%
+            progress = (step - warmup_steps) / (350 - warmup_steps)
+            return 0.5 * (1 + np.cos(np.pi * progress))  # Decays from 1 to 0.5
+        
+        self.scheduler = torch.optim.lr_scheduler.LambdaLR(
+            self.optimizer,
+            lr_lambda
+        )
+        
         self.optimizer_icm = torch.optim.Adam(self.icm.parameters(), lr=lr, betas=betas)
         self.MseLoss = nn.MSELoss(reduction='none')
 
@@ -194,15 +211,13 @@ class ICMPPO:
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
-                linear_decay_lr(self.optimizer, self.timestep * 16)
+                self.scheduler.step()
 
                 epoch_surr_loss += loss.item()
 
         self._icm_update(self.icm_epochs, self.icm_batch_size, curr_states, next_states, actions, mask)
-        self.writer.add_scalar('Lr',
-                               self.optimizer.param_groups[0]['lr'],
-                               self.timestep
-        )
+        current_lr = self.optimizer.param_groups[0]['lr']
+        self.writer.add_scalar('Learning_Rate', current_lr, self.timestep)
         self.writer.add_scalar('Surrogate_loss',
                                epoch_surr_loss / (self.ppo_epochs * (len(indexes) // self.ppo_batch_size + 1)),
                                self.timestep
@@ -235,7 +250,7 @@ class ICMPPO:
                 self.optimizer_icm.zero_grad()
                 unclip_intr_loss.backward()
                 self.optimizer_icm.step()
-                linear_decay_lr(self.optimizer_icm, self.timestep * 16)
+
         self.writer.add_scalar('Forward_loss',
                                epoch_forw_loss / (epochs * (len(indexes) // batch_size + 1)),
                                self.timestep

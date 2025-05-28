@@ -206,7 +206,9 @@ class ICMPPO:
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
-                self.scheduler.step()
+                if self.scheduler is not None:
+                    # Update learning rate
+                    self.scheduler.step()
 
                 epoch_surr_loss += loss.item()
 

@@ -43,7 +43,7 @@ class ActorCritic(nn.Module):
         
         if permute:
             # Create permutation tensor on the same device as action_probs
-            perm = torch.tensor([2, 4, 3, 1, 0], device=self.device)
+            perm = torch.tensor([0, 1, 2, 4, 3], device=self.device)
             # Use torch.index_select for efficient permutation
             action_probs = action_probs.index_select(1, perm)
             

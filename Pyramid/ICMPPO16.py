@@ -33,6 +33,7 @@ class ICMPPO:
                                   n_latent_var=n_latent_var,
                                   activation=Swish(),
                                   device=self.device,
+                                  writer=self.writer
                                   ).to(self.device)
         
         # Create old policy network

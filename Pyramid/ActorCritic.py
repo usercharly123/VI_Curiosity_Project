@@ -5,9 +5,10 @@ import numpy as np
 
 
 class ActorCritic(nn.Module):
-    def __init__(self, state_dim, action_dim, n_latent_var, activation=nn.Tanh(), device='cpu'):
+    def __init__(self, state_dim, action_dim, n_latent_var, activation=nn.Tanh(), device='cpu', writer=None):
         super(ActorCritic, self).__init__()
         self.device = device
+        self.writer = writer
         
         # Body network
         self.body = nn.Sequential(
@@ -68,6 +69,9 @@ class ActorCritic(nn.Module):
         action_probs = self.action_layer(state)
         print("Action probs mean:", action_probs.mean().item())
         print("Action probs std:", action_probs.std().item())
+        if self.writer:
+            self.writer.add_scalar('action_probs/mean', action_probs.mean().item())
+            self.writer.add_scalar('action_probs/std', action_probs.std().item())
         
         dist = Categorical(action_probs)
         action_logprobs = dist.log_prob(action)

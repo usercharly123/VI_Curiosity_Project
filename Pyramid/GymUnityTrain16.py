@@ -130,7 +130,7 @@ def main():
                    max_episodes=max_episodes, last_epoch=args.last_epoch)
 
     # Path to the saved models
-    model_dir = os.path.join('Pyramid', 'models/both')
+    model_dir = os.path.join('Pyramid', 'models/extrinsic')
     ppo_path = os.path.join(model_dir, 'ppo.pt')
     icm_path = os.path.join(model_dir, 'icm.pt')
 

@@ -71,7 +71,7 @@ def main():
     parser.add_argument("--update-timestep", type=int, default=2048, help="Update policy every n timesteps")
     parser.add_argument("--os", type=str, choices=["linux", "windows"], required=True, help="Operating system (linux or windows)", default="linux")
     parser.add_argument("--half_agents", action='store_true', help="Use half environment with 16 agents")
-    parser.add_argument("small_agents", action='store_true', help="Use small environment with 8 agents")
+    parser.add_argument("--small_agents", action='store_true', help="Use small environment with 8 agents")
     parser.add_argument("--reward_mode", type=str, choices=["intrinsic", "extrinsic", "both"], default="both", help="Reward mode to use (intrinsic, extrinsic, or both)")
     parser.add_argument("--graphics", action='store_true', help="Whether to visualize the agent during training")
     parser.add_argument("--load_model", action='store_true', help="Whether to load the last saved model")

@@ -138,7 +138,7 @@ def parse_args():
     parser.add_argument('--tr_epochs', type=int, default=8)
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--n_step', type=int, default=128)
-    parser.add_argument('--lr', type=float, default=2e-4)
+    parser.add_argument('--lr', type=float, default=1e-3)
 
 
     return parser.parse_args()

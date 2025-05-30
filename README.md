@@ -130,7 +130,7 @@ The arguments for the training are:
 
 ```--n_step``` (default = 128): Number of steps per episode per worker
 
-```--lr``` (default = 2e-4): Learning rate
+```--lr``` (default = 1e-3): Learning rate
 
 ### Results
 

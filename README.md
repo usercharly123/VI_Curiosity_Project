@@ -32,7 +32,31 @@ To work in the Pyramid environment, you can **either** take the original environ
 - Under Pyramids, select Scenes and double click on the Pyramid scene, which should open the scene
 - under File/Build Profiles, at the top left-hand corner of the editor, you can build profiles for your Windows/Mac/Linux/... operating system
 
-**OR**, you can just take our pre-exported profiles in the Pyramid16half_agents_windows or Pyramid16half_agents_linux folders. Note that the linux version has only been tested on the SCITAS cluster, and has been built for linux servers, which may be different from your linux machine.
+**OR**, you can just take our pre-exported profiles. In the Environment folder, we provided our profiles for the small environment, the half environment, and the full environment we used. Note that the linux version has only been tested on the SCITAS cluster, and has been built for linux servers, which may be different from your linux machine.
+
+### Behavior of the agent
+Here again, you have two possibilities depending on whether you have installed the Unity Hub application.
+#### With Unity editor (optional)
+With the training, we also have access to the final weights of the model, which are saved in models/reward_mode/Pyramid.onnx. You can use the onnx_adding_constants.py file with the path to modify the onnx file in order to make it compatible with the Unity Editor. This will generate a Pyramid_modified.onnx file.
+
+Then, in Unity, you can select the agent in the "Hierarchy" tab under "AreaPB", and select the Pyramid_modified.onnx file you just generated. An easy way to do so can be to copy paste the Pyramid_modified.onnx file into the "Pyramids" folder used in Unity (this folder is under ml-agents/Project/Assets/ML-Agents/Examples/Pyramids). You can now click on the "Run" button at the top of the tab to observe the behavior of the agent with your trained policy.
+
+#### With python script
+To quickly visualize the environment, you can begin by activating the conda environment
+```bash
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate curiosity
+```
+
+Then, you can crun the following command and change the os to your type of os, and the last parameter to "--small-agents" to visualize in the small environment, or removing it to visualize in the full environment. If you're working on a linux machine, we cannot guarantee that the graphics will work, as we didn't have one to test (we worked in a headless mode on the Scitas cluster).
+```python
+python Pyramid/GymUnityTrain16.py --os windows --graphics --half_agents --load_model
+```
+
+Working on linux may require you to set permissions to the environment folder with
+```bash
+chmod -R 755 Path/To/your/folder/Pyramid/Environments/
+```
 
 ### Training the agent
 Begin by activating the conda environment
@@ -43,25 +67,76 @@ conda activate curiosity
 
 Then, you can run 
 ```python
-python Pyramid/GymUnityTrain16.py --max-episodes 300 --os windows --reward_mode both --update-timestep 1024
+python Pyramid/GymUnityTrain16.py --max-episodes 300 --os windows --reward_mode both --update-timestep 1024 --half_agents
 ```
 where the arguments represent:
-- first argument (150 here): int, max number of episode during the training
-- second argument (linux here): str, your operating system you're running the script on (either windows or linux)
-- third argument (both): str, the reward mode for the training of the agent. Either "extrinsic", "intrinsic", or "both.
-- fourth argument (False here): bool, whether to visualize the agent during training
-- fifth argument (True here): bool, whether to load the model. When set to False, trains from scratch 
-- sixth argument (False here): bool, whether to permute the action space of the agent
+#### Episode and Update Settings
+- `max-episodes` (int, default=100): Maximum number of training episodes to run
+- `update-timestep` (int, default=2048): Number of timesteps between policy updates
+- `last_epoch` (int, default=0): Starting epoch number for training continuation
 
-### Observing the results
-There are two types of results that you can observe.
+#### Environment Configuration
+- `os` (str, choices=["linux", "windows"]): Operating system to run the environment on
+- `half_agents` (flag): Enable half environment mode with 16 agents
+- `small_agents` (flag): Enable small environment mode with 16 agents
 
-#### Reward curves
+#### Reward Configuration
+- `reward_mode` (str, choices=["intrinsic", "extrinsic", "both"], default="both"): 
+  - `intrinsic`: Use only intrinsic rewards
+  - `extrinsic`: Use only extrinsic rewards
+  - `both`: Use both intrinsic and extrinsic rewards
+
+#### Visualization and Model Management
+- `graphics` (flag): Enable visualization of the agent during training
+- `load_model` (flag): Load the last saved model for training continuation
+
+#### State Space and Policy Modifications
+- `permute` (flag): Enable state space permutation
+- `perturb` (flag): Add Gaussian noise to policy weights
+
+#### Learning Rate Settings
+- `scheduler` (flag): Enable learning rate scheduling during training
+
+### Reward curves
 The intrinsic and extrinsic rewards are in a tensorboard event file all along the training. Depending on the reward_mode that you chose, the event file will be located in events/reward_mode/. You can then use the Plots.ipynb script to easily visualize them.
 
-#### Behavior of the agent
-With the training, we also have access to the final weights of the model, which are saved in models/reward_mode/Pyramid.onnx. You can use the onnx_adding_constants.py file with the path to modify the onnx file in order to make it compatible with the Unity Editor. This will generate a Pyramid_modified.onnx file.
-
-Then, in Unity, you can select the agent in the "Hierarchy" tab under "AreaPB", and select the Pyramid_modified.onnx file you just generated. An easy way to do so can be to copy paste the Pyramid_modified.onnx file into the "Pyramids" folder used in Unity (this folder is under ml-agents/Project/Assets/ML-Agents/Examples/Pyramids). You can now click on the "Run" button at the top of the tab to observe the behavior of the agent with your trained policy.
-
 ## **Mario environment**
+
+### Setup 
+In order to run the training on Super Mario Bros, please create the necessary environment from the provided file by running ```conda env create -f full_env.yml``` in your terminal.
+
+### Training the agent
+In order to train the agent, please use the ```train.sh``` script provided. 
+The arguments are: 
+
+```--init_model``` : default = None
+
+```--init_icm``` : default = None
+
+```--save_path``` : 
+
+```--curiosity``` : default = 1
+
+```--extrinsic``` : default = 1
+
+```--perturb``` : default = 0 
+
+```--global_epochs``` : default = 100000
+
+```--tr_epochs``` : default = 8
+
+```--batch_size``` : default = 128
+
+```--n_step``` : default = 128
+
+```--lr``` : default = 2e-4
+
+```--gamma``` : default = 0.99
+
+### Results
+
+During training, the actor-critic and icm models are saved along with the intrinsic and extrinsic rewards along with the loss and a plot of the extrinsic reward. 
+
+
+
+

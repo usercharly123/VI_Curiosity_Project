@@ -65,15 +65,32 @@ Then, you can run
 python Pyramid/GymUnityTrain16.py --max-episodes 300 --os windows --reward_mode both --update-timestep 1024 --half_agents
 ```
 where the arguments represent:
-- first argument (150 here): int, max number of episode during the training
-- second argument (linux here): str, your operating system you're running the script on (either windows or linux)
-- third argument (both): str, the reward mode for the training of the agent. Either "extrinsic", "intrinsic", or "both.
-- fourth argument (False here): bool, whether to visualize the agent during training
-- fifth argument (True here): bool, whether to load the model. When set to False, trains from scratch 
-- sixth argument (False here): bool, whether to permute the action space of the agent
+#### Episode and Update Settings
+- `max-episodes` (int, default=100): Maximum number of training episodes to run
+- `update-timestep` (int, default=2048): Number of timesteps between policy updates
+- `last_epoch` (int, default=0): Starting epoch number for training continuation
 
-### Observing the results
-There are two types of results that you can observe.
+#### Environment Configuration
+- `os` (str, choices=["linux", "windows"]): Operating system to run the environment on
+- `half_agents` (flag): Enable half environment mode with 16 agents
+- `small_agents` (flag): Enable small environment mode with 16 agents
+
+#### Reward Configuration
+- `reward_mode` (str, choices=["intrinsic", "extrinsic", "both"], default="both"): 
+  - `intrinsic`: Use only intrinsic rewards
+  - `extrinsic`: Use only extrinsic rewards
+  - `both`: Use both intrinsic and extrinsic rewards
+
+#### Visualization and Model Management
+- `graphics` (flag): Enable visualization of the agent during training
+- `load_model` (flag): Load the last saved model for training continuation
+
+#### State Space and Policy Modifications
+- `permute` (flag): Enable state space permutation
+- `perturb` (flag): Add Gaussian noise to policy weights
+
+#### Learning Rate Settings
+- `scheduler` (flag): Enable learning rate scheduling during training
 
 #### Reward curves
 The intrinsic and extrinsic rewards are in a tensorboard event file all along the training. Depending on the reward_mode that you chose, the event file will be located in events/reward_mode/. You can then use the Plots.ipynb script to easily visualize them.

@@ -33,7 +33,7 @@ To work in the Pyramid environment, you can **either** take the original environ
 - Under Pyramids, select Scenes and double click on the Pyramid scene, which should open the scene
 - under File/Build Profiles, at the top left-hand corner of the editor, you can build profiles for your Windows/Mac/Linux/... operating system
 
-**OR**, you can just take our pre-exported profiles. In the Environment folder, we provided our profiles for the small environment, the half environment, and the full environment we used. Note that the linux version has only been tested on the SCITAS cluster, and has been built for linux servers, which may be different from your linux machine.
+**OR**, you can just take our pre-exported profiles. In the Environment folder, we provided our profiles for the small environment, the half environment, and the full environment we used. Note that the linux version has only been tested on the SCITAS cluster, and has been built for linux servers, which may be different from your linux machine. **We were not able to include the environment folder in the zip code, so please download it from github (the repository is made public** The simplest option might be to use downgit, and to pass the link to the folder: https://github.com/usercharly123/VI_Curiosity_Project/tree/main/Pyramid/Environments.
 
 ### Behavior of the agent
 Here again, you have two possibilities depending on whether you have installed the Unity Hub application.

@@ -110,17 +110,17 @@ In order to train the agent, please use the ```train.sh``` script provided. It a
 
 The arguments for the training are: 
 
-```--init_model``` (default = None) Path to the actor-critic weights you want to start training from. If you want to train from scratch, please do not use this argument. 
+```--init_model``` (default = None): Path to the actor-critic weights you want to start training from. If you want to train from scratch, please do not use this argument. 
 
-```--init_icm``` (default = None) Path to the ICM weights you want to start training from. If you want to train from scratch, please do not use this argument. 
+```--init_icm``` (default = None): Path to the ICM weights you want to start training from. If you want to train from scratch, please do not use this argument. 
 
-```--results_path``` Path where you want to save your results
+```--results_path```: Path where you want to save your results
 
-```--curiosity``` (flag) Use intrinsic reward during training
+```--curiosity``` (flag): Use intrinsic reward during training
 
-```--extrinsic``` (flag) Use extrinsic reward during training
+```--extrinsic``` (flag): Use extrinsic reward during training
 
-```--perturb``` (flag) Enable action permutation
+```--perturb``` (flag): Enable action permutation
 
 ```--global_epochs``` (default = 100000): Number of training episodes
 

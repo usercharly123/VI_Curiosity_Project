@@ -71,6 +71,7 @@ def main():
     parser.add_argument("--update-timestep", type=int, default=2048, help="Update policy every n timesteps")
     parser.add_argument("--os", type=str, choices=["linux", "windows"], required=True, help="Operating system (linux or windows)", default="linux")
     parser.add_argument("--half_agents", action='store_true', help="Use half environment with 16 agents")
+    parser.add_argument("small_agents", action='store_true', help="Use small environment with 8 agents")
     parser.add_argument("--reward_mode", type=str, choices=["intrinsic", "extrinsic", "both"], default="both", help="Reward mode to use (intrinsic, extrinsic, or both)")
     parser.add_argument("--graphics", action='store_true', help="Whether to visualize the agent during training")
     parser.add_argument("--load_model", action='store_true', help="Whether to load the last saved model")
@@ -85,14 +86,22 @@ def main():
     if current_os == "linux":
         if args.half_agents:
             print("Using half agents environment")
-            env_path = "Pyramid/Pyramids16_linux_half_agents/Pyramids16_linux_half_agents.x86_64"
+            env_path = "Pyramid/Environments/Pyramids16_linux_half_agents/Pyramids16_linux_half_agents.x86_64"
+        elif args.small_agents:
+            env_path = "Pyramid/Environments/Pyramids16_linux_small_agents/Pyramids16_linux_small_agents.x86_64"
         else:
-            env_path = "Pyramid/Pyramids16_linux_agents/Pyramids16_linux_agents.x86_64"
+            env_path = "Pyramid/Environments/Pyramids16_linux_agents/Pyramids16_linux_agents.x86_64"
         # Set LD_LIBRARY_PATH for Linux
         mono_path = os.path.join(os.path.dirname(env_path), "Pyramids16_linux_half_agents_Data/MonoBleedingEdge/x86_64")
         os.environ["LD_LIBRARY_PATH"] = mono_path + ":" + os.environ.get("LD_LIBRARY_PATH", "")
     elif current_os == "windows":
-        env_path = 'Pyramid/Pyramids16_windows_half_agents'
+        if args.half_agents:
+            print("Using half agents environment")
+            env_path = "Pyramid/Environments/Pyramids16_windows_half_agents/Pyramids16_windows_half_agents.exe"
+        elif args.small_agents:
+            env_path = "Pyramid/Environments/Pyramids16_windows_small_agents/Pyramids16_windows_small_agents.exe"
+        else:
+            env_path = 'Pyramid/Environments/Pyramids16_windows_agents'
 
     solved_reward = 1000     # stop training if avg_reward > solved_reward
     log_interval = 100     # print avg reward in the interval

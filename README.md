@@ -92,7 +92,7 @@ where the arguments represent:
 #### Learning Rate Settings
 - `scheduler` (flag): Enable learning rate scheduling during training
 
-#### Reward curves
+### Reward curves
 The intrinsic and extrinsic rewards are in a tensorboard event file all along the training. Depending on the reward_mode that you chose, the event file will be located in events/reward_mode/. You can then use the Plots.ipynb script to easily visualize them.
 
 ## **Mario environment**

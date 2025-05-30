@@ -50,7 +50,7 @@ conda activate curiosity
 
 Then, you can crun the following command and change the os to your type of os, and the last parameter to "--small-agents" to visualize in the small environment, or removing it to visualize in the full environment.
 ```python
-python Pyramid/GymUnityTrain16.py --os windows --graphics --small_agents --load_model
+python Pyramid/GymUnityTrain16.py --os windows --graphics --half_agents --load_model
 ```
 
 ### Training the agent
@@ -62,7 +62,7 @@ conda activate curiosity
 
 Then, you can run 
 ```python
-python Pyramid/GymUnityTrain16.py --max-episodes 300 --os windows --reward_mode both --update-timestep 1024
+python Pyramid/GymUnityTrain16.py --max-episodes 300 --os windows --reward_mode both --update-timestep 1024 --half_agents
 ```
 where the arguments represent:
 - first argument (150 here): int, max number of episode during the training

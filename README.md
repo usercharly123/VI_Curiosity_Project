@@ -65,3 +65,19 @@ With the training, we also have access to the final weights of the model, which 
 Then, in Unity, you can select the agent in the "Hierarchy" tab under "AreaPB", and select the Pyramid_modified.onnx file you just generated. An easy way to do so can be to copy paste the Pyramid_modified.onnx file into the "Pyramids" folder used in Unity (this folder is under ml-agents/Project/Assets/ML-Agents/Examples/Pyramids). You can now click on the "Run" button at the top of the tab to observe the behavior of the agent with your trained policy.
 
 ## **Mario environment**
+
+### Setup 
+In order to run the training on Super Mario Bros, please create the necessary environment from the provided file by running ```conda env create -f full_env.yml``` in your terminal.
+
+### Training the agent
+In order to train the agent, please use the ```train.sh``` script provided. 
+The arguments are: 
+
+```--init_model``` :
+```--init_model``` : 
+
+### Results
+
+
+
+

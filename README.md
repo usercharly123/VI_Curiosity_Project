@@ -87,10 +87,33 @@ In order to run the training on Super Mario Bros, please create the necessary en
 In order to train the agent, please use the ```train.sh``` script provided. 
 The arguments are: 
 
-```--init_model``` :
-```--init_model``` : 
+```--init_model``` : default = None
+
+```--init_icm``` : default = None
+
+```--save_path``` : 
+
+```--curiosity``` : default = 1
+
+```--extrinsic``` : default = 1
+
+```--perturb``` : default = 0 
+
+```--global_epochs``` : default = 100000
+
+```--tr_epochs``` : default = 8
+
+```--batch_size``` : default = 128
+
+```--n_step``` : default = 128
+
+```--lr``` : default = 2e-4
+
+```--gamma``` : default = 0.99
 
 ### Results
+
+During training, the actor-critic and icm models are saved along with the intrinsic and extrinsic rewards along with the loss and a plot of the extrinsic reward. 
 
 
 

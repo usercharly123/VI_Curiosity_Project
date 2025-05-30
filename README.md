@@ -106,36 +106,36 @@ The intrinsic and extrinsic rewards are in a tensorboard event file all along th
 In order to run the training on Super Mario Bros, please create the necessary environment from the provided file by running ```conda env create -f full_env.yml``` in your terminal.
 
 ### Training the agent
-In order to train the agent, please use the ```train.sh``` script provided. 
-The arguments are: 
+In order to train the agent, please use the ```train.sh``` script provided. It activates the conda environment and launches the training.
 
-```--init_model``` : default = None
+The arguments for the training are: 
 
-```--init_icm``` : default = None
+```--init_model``` (default = None) Path to the actor-critic weights you want to start training from. If you want to train from scratch, please do not use this argument. 
 
-```--save_path``` : 
+```--init_icm``` (default = None) Path to the ICM weights you want to start training from. If you want to train from scratch, please do not use this argument. 
 
-```--curiosity``` : default = 1
+```--results_path``` Path where you want to save your results
 
-```--extrinsic``` : default = 1
+```--curiosity``` (flag) Use intrinsic reward during training
 
-```--perturb``` : default = 0 
+```--extrinsic``` (flag) Use extrinsic reward during training
 
-```--global_epochs``` : default = 100000
+```--perturb``` (flag) Enable action permutation
 
-```--tr_epochs``` : default = 8
+```--global_epochs``` (default = 100000): Number of training episodes
 
-```--batch_size``` : default = 128
+```--tr_epochs``` (default = 8): Number of passes on the training dataset
 
-```--n_step``` : default = 128
+```--batch_size``` (default = 128): Batch size
 
-```--lr``` : default = 2e-4
+```--n_step``` (default = 128): Number of steps per episode per worker
 
-```--gamma``` : default = 0.99
+```--lr``` (default = 2e-4): Learning rate
 
 ### Results
 
-During training, the actor-critic and icm models are saved along with the intrinsic and extrinsic rewards along with the loss and a plot of the extrinsic reward. 
+During training, the actor-critic and icm models are saved along with the intrinsic and extrinsic rewards along with the loss and a plot of the extrinsic reward per step. 
+They are automatically saved in the results folder. 
 
 
 

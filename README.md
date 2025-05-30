@@ -48,7 +48,7 @@ source ~/miniconda3/etc/profile.d/conda.sh
 conda activate curiosity
 ```
 
-Then, you can crun the following command and change the os to your type of os, and the last parameter to "--small-agents" to visualize in the small environment, or removing it to visualize in the full environment.
+Then, you can crun the following command and change the os to your type of os, and the last parameter to "--small-agents" to visualize in the small environment, or removing it to visualize in the full environment. If you're working on a linux machine, we cannot guarantee that the graphics will work, as we didn't have one to test (we worked in a headless mode on the Scitas cluster).
 ```python
 python Pyramid/GymUnityTrain16.py --os windows --graphics --half_agents --load_model
 ```

@@ -130,9 +130,9 @@ def main():
                    max_episodes=max_episodes, last_epoch=args.last_epoch)
 
     # Path to the saved models
-    model_dir = os.path.join('Pyramid', 'models')
-    ppo_path = os.path.join(model_dir, 'ppo_orig.pt')
-    icm_path = os.path.join(model_dir, 'icm300.pt')
+    model_dir = os.path.join('Pyramid', 'models/both')
+    ppo_path = os.path.join(model_dir, 'ppo.pt')
+    icm_path = os.path.join(model_dir, 'icm.pt')
 
     # Load the last saved policy and ICM if they exist
     load_model = args.load_model

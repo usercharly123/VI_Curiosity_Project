@@ -8,7 +8,7 @@ This repository contains our implementation of assessing the properties of Patha
 The Pyramid environment consists of a square 2D environment where the blue agent needs to press a button to spawn a pyramid, then navigate to the pyramid, knock it over, and move to the gold brick at the top to get a reward.
 
 
-## **Installation**  
+### **Installation**  
 To begin the experiments, you first need to install the required packages and dependencies. To do this, please run the [setup_env.sh](setup_env.sh) script.
 
 ```bash

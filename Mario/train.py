@@ -40,25 +40,27 @@ def send_actions(n, actions):
         t.start()
         threads.append((i,t))
     return threads
+
+
 def main():
 
     args = parse_args()
 
-    path = args.save_path
+    path = args.results_path
     model_path = args.init_model
     icm_path = args.init_icm
-    use_curiosity = bool(args.curiosity)
-    pertubation = bool(args.perturb)
+    use_curiosity = args.curiosity
+    use_extrinsic = args.extrinsic
+    pertubation = args.perturb
 
     global_epochs = args.global_epochs
     training_epochs = args.tr_epochs
     batch_size = args.batch_size
-
-    hidden_size = args.hidden_size
     learning_rate = args.lr
 
     n_step = args.n_step
-    gamma = args.gamma
+    gamma = 0.99
+    hidden_size = 512
 
     device = device_setup()
 
@@ -147,7 +149,7 @@ def main():
             [1, 0, 2, 3, 4]).reshape(-1, *state.shape)
 
         # total_intrinsic_r: [num_workers, n_step]
-        total_intrinsic_r = np.stack(h_intrinsic_r).T  # It is transposed
+        total_intrinsic_r = np.stack(h_intrinsic_r).T 
         total_extrinsic_r = np.stack(h_extrinsic_r).T
         total_extrinsic_r *= 1e-1
 
@@ -155,8 +157,16 @@ def main():
         total_value = np.stack(h_values).T
         total_done = np.stack(h_dones).T
 
+        total_r = np.zeros_like(total_extrinsic_r)
+
+        if use_extrinsic: 
+            total_r += total_extrinsic_r
+
+        if use_curiosity: 
+            total_r += total_intrinsic_r
+
         target, advantage = compute_target_advantage(
-            total_intrinsic_r + total_extrinsic_r,
+            total_r,
             total_done,
             total_value,
             gamma,
@@ -182,14 +192,14 @@ def main():
 
             if agent.use_icm: 
 
-                name_icm = f"models/ICM_perturbation-{pertubation}_train-{training_epochs}.pt"
+                name_icm = f"results/models/ICM_extr{use_extrinsic}_perturbation-{pertubation}_train-{training_epochs}.pt"
                 torch.save(agent.icm.state_dict(), path + name_icm)
 
-            name_model = f"models/model_curiosity-{use_curiosity}_perturbation-{pertubation}_train-{training_epochs}.pt"
+            name_model = f"results/models/model_curiosity-{use_curiosity}_extr{use_extrinsic}_perturbation-{pertubation}_train-{training_epochs}.pt"
             torch.save(agent.model.state_dict(), path + name_model)
 
-            numpy_path = f"arrays/model_curiosity-{use_curiosity}_perturbation-{pertubation}_train-{training_epochs}.npy"
-            plot_path = f"plots/model_curiosity-{use_curiosity}_perturbation-{pertubation}_train-{training_epochs}.png"
+            numpy_path = f"results/arrays/model_curiosity-{use_curiosity}_extr{use_extrinsic}_perturbation-{pertubation}_train-{training_epochs}.npy"
+            plot_path = f"results/plots/model_curiosity-{use_curiosity}_extr{use_extrinsic}_perturbation-{pertubation}_train-{training_epochs}.png"
             save_rewards(ext_reward, int_reward, losses, path + numpy_path)
             plot_rewards(ext_reward, path + plot_path, window = 50)
 

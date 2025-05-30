@@ -129,18 +129,17 @@ def parse_args():
 
     parser.add_argument('--init_model', type=str, default=None)
     parser.add_argument('--init_icm', type=str, default=None)
-    parser.add_argument('--save_path', type=str, default="/home/isegard/visual_intelligence/Mario/results/")
-    parser.add_argument('--curiosity', type=int, default=1)
-    parser.add_argument('--perturb', type=int, default=0)
+    parser.add_argument('--results_path', type=str)
+    parser.add_argument('--curiosity', action='store_true')
+    parser.add_argument('--extrinsic', action='store_true')
+    parser.add_argument('--perturb', action='store_true')
 
     parser.add_argument('--global_epochs', type=int, default=100000)
     parser.add_argument('--tr_epochs', type=int, default=8)
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--n_step', type=int, default=128)
+    parser.add_argument('--lr', type=float, default=2e-4)
 
-    parser.add_argument('--hidden_size', type=int, default=512)
-    parser.add_argument('--lr', type=float, default=1e-4)
-    parser.add_argument('--gamma', type=float, default=0.99)
 
     return parser.parse_args()
 

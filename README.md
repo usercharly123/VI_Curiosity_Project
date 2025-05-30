@@ -32,7 +32,26 @@ To work in the Pyramid environment, you can **either** take the original environ
 - Under Pyramids, select Scenes and double click on the Pyramid scene, which should open the scene
 - under File/Build Profiles, at the top left-hand corner of the editor, you can build profiles for your Windows/Mac/Linux/... operating system
 
-**OR**, you can just take our pre-exported profiles in the Pyramid16half_agents_windows or Pyramid16half_agents_linux folders. Note that the linux version has only been tested on the SCITAS cluster, and has been built for linux servers, which may be different from your linux machine.
+**OR**, you can just take our pre-exported profiles. In the Environment folder, we provided our profiles for the small environment, the half environment, and the full environment we used. Note that the linux version has only been tested on the SCITAS cluster, and has been built for linux servers, which may be different from your linux machine.
+
+#### Behavior of the agent
+Here again, you have two possibilities depending on whether you have installed the Unity Hub application.
+##### With Unity editor
+With the training, we also have access to the final weights of the model, which are saved in models/reward_mode/Pyramid.onnx. You can use the onnx_adding_constants.py file with the path to modify the onnx file in order to make it compatible with the Unity Editor. This will generate a Pyramid_modified.onnx file.
+
+Then, in Unity, you can select the agent in the "Hierarchy" tab under "AreaPB", and select the Pyramid_modified.onnx file you just generated. An easy way to do so can be to copy paste the Pyramid_modified.onnx file into the "Pyramids" folder used in Unity (this folder is under ml-agents/Project/Assets/ML-Agents/Examples/Pyramids). You can now click on the "Run" button at the top of the tab to observe the behavior of the agent with your trained policy.
+
+##### With python script
+To quickly visualize the environment, you can begin by activating the conda environment
+```bash
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate curiosity
+```
+
+Then, you can crun the following command and change the os to your type of os, and the last parameter to "--small-agents" to visualize in the small environment, or removing it to visualize in the full environment.
+```python
+python Pyramid/GymUnityTrain16.py --os windows --graphics --small_agents --load_model
+```
 
 ### Training the agent
 Begin by activating the conda environment
@@ -58,11 +77,6 @@ There are two types of results that you can observe.
 
 #### Reward curves
 The intrinsic and extrinsic rewards are in a tensorboard event file all along the training. Depending on the reward_mode that you chose, the event file will be located in events/reward_mode/. You can then use the Plots.ipynb script to easily visualize them.
-
-#### Behavior of the agent
-With the training, we also have access to the final weights of the model, which are saved in models/reward_mode/Pyramid.onnx. You can use the onnx_adding_constants.py file with the path to modify the onnx file in order to make it compatible with the Unity Editor. This will generate a Pyramid_modified.onnx file.
-
-Then, in Unity, you can select the agent in the "Hierarchy" tab under "AreaPB", and select the Pyramid_modified.onnx file you just generated. An easy way to do so can be to copy paste the Pyramid_modified.onnx file into the "Pyramids" folder used in Unity (this folder is under ml-agents/Project/Assets/ML-Agents/Examples/Pyramids). You can now click on the "Run" button at the top of the tab to observe the behavior of the agent with your trained policy.
 
 ## **Mario environment**
 

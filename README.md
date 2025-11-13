@@ -1,6 +1,8 @@
-# CS503 VI_Curiosity_Project
+# Curiosity-driven perturbation recovery
 
-This repository contains our implementation of assessing the properties of Pathak et al's definition of curiosity under permutation of state space in two environments:
+This repository contains our implementation for evaluating the properties of [Pathak et al's]([url](https://proceedings.mlr.press/v70/pathak17a/pathak17a.pdf)) definition of curiosity, after permuting the state space of a pre-trained reinforcement learning agent.
+
+To assess the robustness of our results, we compare these properties in two environments:
 - the Pyramid game from the Unity environment
 - the Mario game from the Gymnasium environment
 

@@ -1,4 +1,4 @@
-# Curiosity-driven perturbation recovery
+# Curiosity-driven perturbation recovery of an RL agent
 
 This repository contains our implementation for evaluating the properties of [Pathak et al's]([url](https://proceedings.mlr.press/v70/pathak17a/pathak17a.pdf)) definition of curiosity, after permuting the state space of a pre-trained reinforcement learning agent.
 

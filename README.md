@@ -1,6 +1,6 @@
 # Curiosity-driven perturbation recovery of an RL agent
 
-This repository contains our implementation for evaluating the recovery properties of curiosity as defined in [Pathak et al's] ([url](https://proceedings.mlr.press/v70/pathak17a/pathak17a.pdf)) , after permuting the state space of a pre-trained reinforcement learning agent.
+This repository contains our implementation for evaluating the recovery properties that curiosity as defined in [Pathak et al's] ([url](https://proceedings.mlr.press/v70/pathak17a/pathak17a.pdf)) can achieve, after permuting the state space of a pre-trained reinforcement learning agent.
 
 To assess the robustness of our results, we compare these properties in two environments:
 - the Pyramid game from the Unity environment
